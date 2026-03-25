@@ -23,7 +23,7 @@ const navGroups: NavGroup[] = [
   { label: 'Ground Operations', icon: Cog, items: [{ to: '/gate-register', label: 'Gate Register' }, { to: '/daily-register', label: 'Daily Register' }, { to: '/attendance', label: 'Mark Attendance' }, { to: '/groom-worksheet', label: 'Groom Worksheet' }, { to: '/work-record', label: 'Work Record' }, { to: '/daily-work-records', label: 'Daily Work Records' }, { to: '/inspection-rounds', label: 'Inspection Rounds' }, { to: '/housekeeping-inventory', label: 'Housekeeping Inventory' }] },
   { label: 'Restaurant', icon: UtensilsCrossed, items: [{ to: '/groceries-inventory', label: 'Groceries Inventory' }] },
   { label: 'Accounts & Finance', icon: DollarSign, items: [{ to: '/invoices', label: 'Invoice Generation' }, { to: '/expenses', label: 'Expense Tracking' }, { to: '/fines', label: 'Fine System' }] },
-  { label: 'System', icon: Shield, items: [{ to: '/reports', label: 'Reports' }, { to: '/permissions', label: 'Permissions' }, { to: '/entity-map', label: 'Entity Map' }, { to: '/profile', label: 'Profile' }] },
+  { label: 'System', icon: Shield, items: [{ to: '/reports', label: 'Reports' }, { to: '/permissions', label: 'Permissions' }, { to: '/entity-map', label: 'Entity Map' }, { to: '/market', label: 'Market' }, { to: '/profile', label: 'Profile' }] },
 ];
 
 export default function AppSidebar({ collapsed, onToggle, onNavClick }: { collapsed: boolean; onToggle: () => void; onNavClick?: () => void }) {

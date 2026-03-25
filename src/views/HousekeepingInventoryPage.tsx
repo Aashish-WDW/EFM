@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { housekeepingItems } from '@/data/seed';
 import FormDialog from '@/components/shared/FormDialog';
 import SelectField from '@/components/shared/SelectField';
-import { Search, Download, Plus, AlertTriangle, MapPin, DollarSign } from 'lucide-react';
+import { Search, Download, Plus, AlertTriangle, MapPin, DollarSign, Edit, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 const inp = 'w-full h-10 px-3 rounded-lg bg-surface-container-high border border-border text-foreground text-sm placeholder:text-muted-foreground/50 focus:ring-1 focus:ring-primary outline-none';
 const lbl = 'label-sm text-muted-foreground block mb-1.5';
@@ -128,11 +129,11 @@ export default function HousekeepingInventoryPage() {
 
       <div className="bg-surface-container-highest rounded-xl edge-glow overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[750px]">
+          <table className="w-full text-sm min-w-[850px]">
             <thead>
               <tr className="bg-surface-container-high">
-                {['Item', 'Category', 'Qty', 'Unit', 'Min Stock', 'Stock Level', 'Area', 'Location', 'Cost/Unit', 'Alert'].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{h}</th>
+                {['Item', 'Category', 'Qty', 'Unit', 'Min Stock', 'Stock Level', 'Area', 'Location', 'Cost/Unit', 'Alert', 'Actions'].map(h => (
+                  <th key={h} className={`px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground ${h === 'Actions' ? 'text-right' : 'text-left'}`}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -142,10 +143,10 @@ export default function HousekeepingInventoryPage() {
                 const pct = Math.min(100, Math.round((h.quantity / (h.minStockLevel * 3)) * 100));
                 return (
                   <tr key={h.id} className="border-t border-border/50 hover:bg-surface-container-high/50 transition-colors">
-                    <td className="px-4 py-3 font-medium text-foreground">{h.itemName}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{h.category}</td>
+                    <td className="px-4 py-3 font-medium text-foreground text-xs">{h.itemName}</td>
+                    <td className="px-4 py-3 text-muted-foreground text-xs">{h.category}</td>
                     <td className="px-4 py-3 font-mono text-xs">{h.quantity}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{h.unitType}</td>
+                    <td className="px-4 py-3 text-muted-foreground text-xs">{h.unitType}</td>
                     <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{h.minStockLevel}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
@@ -155,14 +156,30 @@ export default function HousekeepingInventoryPage() {
                         {isLow && <span className="text-[10px] text-destructive font-semibold">LOW</span>}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">{h.usageArea}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{h.storageLocation}</td>
-                    <td className="px-4 py-3 font-mono text-xs">₹{h.costPerUnit}</td>
+                    <td className="px-4 py-3 text-muted-foreground text-xs">{h.usageArea}</td>
+                    <td className="px-4 py-3 text-muted-foreground text-xs">{h.storageLocation}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-foreground">₹{h.costPerUnit}</td>
                     <td className="px-4 py-3">
                       {h.reorderAlertEnabled
-                        ? <span className="text-success text-xs font-medium">✓ On</span>
-                        : <span className="text-muted-foreground text-xs">Off</span>
+                        ? <span className="text-success text-[10px] font-bold uppercase tracking-wider">✓ On</span>
+                        : <span className="text-muted-foreground text-[10px] font-bold uppercase tracking-wider">Off</span>
                       }
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <button 
+                          onClick={() => toast.info(`Opening edit form for ${h.itemName}`)}
+                          className="w-7 h-7 rounded bg-surface-container-high flex items-center justify-center text-muted-foreground hover:text-primary transition-colors hover:bg-primary/10"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                        </button>
+                        <button 
+                          onClick={() => toast.error(`Delete requested for ${h.itemName}`)}
+                          className="w-7 h-7 rounded bg-surface-container-high flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors hover:bg-destructive/10"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

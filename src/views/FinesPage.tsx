@@ -4,6 +4,7 @@ import { DollarSign, AlertTriangle, Plus, Upload, MoreVertical, Zap } from 'luci
 import { fines } from '@/data/seed';
 import SelectField from '@/components/shared/SelectField';
 import DatePicker from '@/components/shared/DatePicker';
+import { toast } from 'sonner';
 
 const statusStyles: Record<string, string> = {
   Issued: 'bg-warning/20 text-warning border border-warning/30',
@@ -90,7 +91,10 @@ export default function FinesPage() {
                   <p className="text-xs text-muted-foreground">Drop PDF or Images here to attach</p>
                 </div>
               </div>
-              <button className="w-full h-10 rounded-lg bg-gradient-to-r from-primary to-primary-dim text-primary-foreground text-sm font-semibold tracking-wider flex items-center justify-center gap-2">
+              <button 
+                onClick={() => toast.success('Fine enforcement action executed successfully')}
+                className="w-full h-10 rounded-lg bg-gradient-to-r from-primary to-primary-dim text-primary-foreground text-sm font-semibold tracking-wider flex items-center justify-center gap-2 transition-opacity active:opacity-80"
+              >
                 Execute Fine Action <Zap className="w-4 h-4" />
               </button>
             </div>
@@ -110,7 +114,10 @@ export default function FinesPage() {
                     </button>
                   ))}
                 </div>
-                <button className="h-8 px-3 rounded-lg border border-border text-xs text-muted-foreground flex items-center gap-1.5 hover:bg-surface-container-high">
+                <button 
+                  onClick={() => toast.info('Exporting audit history...')}
+                  className="h-8 px-3 rounded-lg border border-border text-xs text-muted-foreground flex items-center gap-1.5 hover:bg-surface-container-high transition-colors"
+                >
                   <Upload className="w-3 h-3" /> Export
                 </button>
               </div>
@@ -150,7 +157,14 @@ export default function FinesPage() {
                         {statusLabels[f.status] || f.status.toUpperCase()}
                       </span>
                     </td>
-                    <td className="px-3 py-4"><button className="text-muted-foreground hover:text-foreground"><MoreVertical className="w-4 h-4" /></button></td>
+                    <td className="px-3 py-4">
+                      <button 
+                        onClick={() => toast.info(`Action menu for fine #${f.id}`)}
+                        className="text-muted-foreground hover:text-foreground p-1 rounded hover:bg-surface-container-high transition-colors"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

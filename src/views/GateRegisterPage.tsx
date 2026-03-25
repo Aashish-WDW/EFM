@@ -6,6 +6,7 @@ import FormDialog from '@/components/shared/FormDialog';
 import SelectField from '@/components/shared/SelectField';
 import { Search, Download, Plus, DoorOpen, DoorClosed, Car, Clock, Shield, Users } from 'lucide-react';
 import TimePicker from '@/components/shared/TimePicker';
+import { toast } from 'sonner';
 
 const inp = 'w-full h-10 px-3 rounded-lg bg-surface-container-high border border-border text-foreground text-sm placeholder:text-muted-foreground/50 focus:ring-1 focus:ring-primary outline-none';
 const lbl = 'label-sm text-muted-foreground block mb-1.5';
@@ -140,7 +141,8 @@ export default function GateRegisterPage() {
               <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Entry</th>
               <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Exit</th>
               <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Vehicle</th>
-              <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Purpose</th>
+              <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground mr-1">Purpose</th>
+              <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -162,7 +164,24 @@ export default function GateRegisterPage() {
                   }
                 </td>
                 <td className="px-4 py-3"><span className="font-mono text-xs text-foreground">{g.vehicleNo}</span></td>
-                <td className="px-4 py-3 text-muted-foreground">{g.purpose}</td>
+                <td className="px-4 py-3 text-muted-foreground max-w-[150px] truncate">{g.purpose}</td>
+                <td className="px-4 py-3 text-right">
+                  {!g.exitTime ? (
+                    <button 
+                      onClick={() => toast.success(`Exit logged for ${g.personName}`)}
+                      className="px-3 py-1 rounded bg-success/10 text-success hover:bg-success/20 text-[10px] font-bold uppercase tracking-wider transition-colors"
+                    >
+                      Mark Exit
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => toast.info(`Viewing details for ${g.personName}`)}
+                      className="px-3 py-1 rounded bg-surface-container-high text-muted-foreground hover:text-foreground text-[10px] font-bold uppercase tracking-wider transition-colors"
+                    >
+                      Details
+                    </button>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

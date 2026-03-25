@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -n \"allocation\\\\|Allocation\" /d/code/frontend-first-data/src/pages/*.tsx)",
+      "Bash(find d:/code/frontend-first-data/src/pages -type f -name *Medicine* -o -name *HorseFeeds* -o -name *FeedInventory* -o -name *FarrierShoeing* -o -name *TackInventory* -o -name *FarrierInventory*)",
+      "Bash(for f:*)",
+      "Bash(do if:*)",
+      "Read(//d/code/frontend-first-data/**)",
+      "Bash(mv temp:*)",
+      "Bash(npm install:*)",
+      "Read(//dev/**)",
+      "Bash(find /d/code/lookaround/src -type f \\\\\\(-name *.tsx -o -name *.ts \\\\\\))"
+    ]
+  }
+}

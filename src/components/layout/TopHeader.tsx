@@ -40,6 +40,8 @@ export default function TopHeader({ onMenuClick }: { onMenuClick?: () => void })
           <Menu className="w-5 h-5" />
         </button>
 
+        <span className="md:hidden font-display font-bold italic text-primary text-xl tracking-tight text-glow animate-pulse px-2 shrink-0">EFM</span>
+
         {/* Mobile search toggle */}
         <button onClick={() => setMobileSearchOpen(o => !o)} className="sm:hidden w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-surface-container-high transition-colors shrink-0">
           <Search className="w-4 h-4" />
@@ -150,7 +152,7 @@ export default function TopHeader({ onMenuClick }: { onMenuClick?: () => void })
     </header>
 
     {/* Mobile Quote Bar — visible below navbar on mobile only */}
-    <div className="md:hidden flex items-center gap-2 px-4 py-1.5 bg-surface-container-low/80 border-b border-surface-container-high overflow-hidden">
+    <div className="md:hidden flex items-center gap-2 px-4 py-1.5 bg-surface-container-low/80 border-b border-surface-container-high overflow-hidden sticky top-14 z-10 backdrop-blur-md">
       <Quote className="w-3 h-3 text-primary/50 shrink-0 rotate-180" />
       <div className="flex-1 min-w-0 overflow-hidden relative h-4">
         <AnimatePresence mode="wait">

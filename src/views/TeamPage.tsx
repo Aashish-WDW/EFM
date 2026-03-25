@@ -4,6 +4,8 @@ import { Search, Plus, SlidersHorizontal, ChevronLeft, ChevronRight, MoreVertica
 import { teamMembers } from '@/data/seed';
 import FormDialog from '@/components/shared/FormDialog';
 import SelectField from '@/components/shared/SelectField';
+import HorseIcon from '@/components/shared/HorseIcon';
+
 
 const roleColorHex: Record<string, string> = {
   'Guard': '#8b5cf6', 'Groom': '#22c55e', 'Gardener': '#84cc16', 'Housekeeping': '#a855f7',
@@ -141,16 +143,20 @@ export default function TeamPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-2 gap-4">
         {[
           { label: 'TOTAL STAFF', value: teamMembers.length, color: 'text-primary' },
           { label: 'ACTIVE SHIFTS', value: 12, color: 'text-primary' },
           { label: 'ON MEDICAL LEAVE', value: '03', color: 'text-warning' },
           { label: 'PENDING CLEARANCES', value: '05', color: 'text-warning' },
         ].map(card => (
-          <div key={card.label} className="rounded-xl border border-border bg-card p-4 sm:p-5">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">{card.label}</p>
-            <p className={`text-2xl sm:text-3xl font-bold ${card.color}`}>{card.value}</p>
+          <div key={card.label} className="rounded-xl border border-border bg-card p-4 sm:p-5 relative overflow-hidden group">
+            {/* Horse watermark */}
+            <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
+              <HorseIcon className="w-24 h-24" />
+            </div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1 relative z-10">{card.label}</p>
+            <p className={`text-2xl sm:text-3xl font-bold relative z-10 ${card.color}`}>{card.value}</p>
           </div>
         ))}
       </div>

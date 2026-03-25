@@ -1,6 +1,7 @@
 'use client';
 import { workRecords } from '@/data/seed';
 import { Download, Users, ListChecks, Clock, TrendingUp } from 'lucide-react';
+import HorseIcon from '@/components/shared/HorseIcon';
 
 export default function DailyWorkRecordsPage() {
   const totalHours = workRecords.reduce((sum, wr) => sum + wr.entries.reduce((s, e) => s + e.totalHours, 0), 0);
@@ -19,29 +20,33 @@ export default function DailyWorkRecordsPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-surface-container-highest rounded-xl p-5 edge-glow">
+      <div className="grid grid-cols-2 lg:grid-cols-2 gap-4">
+        <div className="bg-surface-container-highest rounded-xl p-5 edge-glow relative overflow-hidden group">
+          <HorseIcon className="absolute -right-4 -bottom-4 w-24 h-24 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity -rotate-12" />
           <div className="flex items-center justify-between mb-3">
             <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Staff Today</span>
             <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center"><Users className="w-4 h-4 text-primary" /></div>
           </div>
           <p className="text-3xl font-bold text-foreground">{String(workRecords.length).padStart(2, '0')}</p>
         </div>
-        <div className="bg-surface-container-highest rounded-xl p-5 edge-glow">
+        <div className="bg-surface-container-highest rounded-xl p-5 edge-glow relative overflow-hidden group">
+          <HorseIcon className="absolute -right-4 -bottom-4 w-24 h-24 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity -rotate-12" />
           <div className="flex items-center justify-between mb-3">
             <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Total Tasks</span>
             <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center"><ListChecks className="w-4 h-4 text-primary" /></div>
           </div>
           <p className="text-3xl font-bold text-foreground">{String(totalTasks).padStart(2, '0')}</p>
         </div>
-        <div className="bg-surface-container-highest rounded-xl p-5 edge-glow">
+        <div className="bg-surface-container-highest rounded-xl p-5 edge-glow relative overflow-hidden group">
+          <HorseIcon className="absolute -right-4 -bottom-4 w-24 h-24 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity -rotate-12" />
           <div className="flex items-center justify-between mb-3">
             <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Total Hours</span>
             <div className="w-9 h-9 rounded-lg bg-success/10 flex items-center justify-center"><Clock className="w-4 h-4 text-success" /></div>
           </div>
           <p className="text-3xl font-bold text-foreground">{totalHours}<span className="text-lg text-muted-foreground ml-1">hrs</span></p>
         </div>
-        <div className="bg-surface-container-highest rounded-xl p-5 edge-glow">
+        <div className="bg-surface-container-highest rounded-xl p-5 edge-glow relative overflow-hidden group">
+          <HorseIcon className="absolute -right-4 -bottom-4 w-24 h-24 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity -rotate-12" />
           <div className="flex items-center justify-between mb-3">
             <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Avg Hours/Staff</span>
             <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center"><TrendingUp className="w-4 h-4 text-primary" /></div>

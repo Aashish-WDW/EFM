@@ -35,7 +35,7 @@ export default function Dashboard() {
         </p>
       </div>
 
-      <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-2 lg:grid-cols-2 gap-4">
         <MetricCard icon={Package} title="Total Horses" value={dashboardMetrics.totalHorses} subtitle="Registered Assets" subtitleColor="destructive" />
         <MetricCard icon={Users} title="Total Staff / Users" value={dashboardMetrics.totalStaff} subtitle="Active Sessions" subtitleColor="primary" />
         <MetricCard icon={ClipboardList} title="Pending Tasks" value={dashboardMetrics.pendingTasks} subtitle="Queue Clear" subtitleColor="destructive" variant="success" />

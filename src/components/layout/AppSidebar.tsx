@@ -52,7 +52,7 @@ export default function AppSidebar({ collapsed, onToggle, onNavClick }: { collap
       </div>
 
       {/* Collapse Toggle */}
-      <div className={`px-3 mb-1 ${collapsed ? 'flex justify-center' : ''}`}>
+      <div className={`hidden md:flex px-3 mb-1 ${collapsed ? 'justify-center' : ''}`}>
         <button onClick={onToggle} className="flex items-center justify-center w-full h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-surface-container-high transition-colors" title={collapsed ? 'Expand' : 'Collapse'}>
           {collapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
         </button>

@@ -169,7 +169,7 @@ export default function AnalysisPage() {
       </div>
 
       {/* KPI Tiles Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 stagger-children">
+      <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 stagger-children">
         <KpiTile icon={HorseIcon} label="Total Horses" value={dashboardMetrics.totalHorses} subtitle="+2 this quarter" color="bg-primary/15 text-primary" sparkData={[12, 15, 18, 20, 22, 24]} />
         <KpiTile icon={Users} label="Active Staff" value={dashboardMetrics.totalStaff} subtitle="100% checked in" color="bg-success/15 text-success" sparkData={[20, 21, 22, 24, 25, 26]} />
         <KpiTile icon={Activity} label="Task Completion" value="94%" subtitle="+5% vs last week" color="bg-primary/15 text-primary" />

@@ -1,8 +1,9 @@
 'use client';
-import { useState } from 'react';
 import { dailyRegister } from '@/data/seed';
 import StatusBadge from '@/components/shared/StatusBadge';
 import { Search, Download, ClipboardCheck, UserCheck, UserX, Clock } from 'lucide-react';
+import { useState } from 'react';
+import HorseIcon from '@/components/shared/HorseIcon';
 
 export default function DailyRegisterPage() {
   const [search, setSearch] = useState('');
@@ -24,15 +25,17 @@ export default function DailyRegisterPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-surface-container-highest rounded-xl p-5 edge-glow">
+      <div className="grid grid-cols-2 lg:grid-cols-2 gap-4">
+        <div className="bg-surface-container-highest rounded-xl p-5 edge-glow relative overflow-hidden group">
+          <HorseIcon className="absolute -right-4 -bottom-4 w-24 h-24 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity -rotate-12" />
           <div className="flex items-center justify-between mb-3">
             <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Total Grooms</span>
             <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center"><ClipboardCheck className="w-4 h-4 text-primary" /></div>
           </div>
           <p className="text-3xl font-bold text-foreground">{String(dailyRegister.length).padStart(2, '0')}</p>
         </div>
-        <div className="bg-surface-container-highest rounded-xl p-5 edge-glow">
+        <div className="bg-surface-container-highest rounded-xl p-5 edge-glow relative overflow-hidden group">
+          <HorseIcon className="absolute -right-4 -bottom-4 w-24 h-24 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity -rotate-12" />
           <div className="flex items-center justify-between mb-3">
             <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Checked In</span>
             <div className="w-9 h-9 rounded-lg bg-success/10 flex items-center justify-center"><UserCheck className="w-4 h-4 text-success" /></div>
@@ -40,7 +43,8 @@ export default function DailyRegisterPage() {
           <p className="text-3xl font-bold text-success">{String(checkedIn).padStart(2, '0')}</p>
           <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-success mt-1">Active Now</p>
         </div>
-        <div className="bg-surface-container-highest rounded-xl p-5 edge-glow">
+        <div className="bg-surface-container-highest rounded-xl p-5 edge-glow relative overflow-hidden group">
+          <HorseIcon className="absolute -right-4 -bottom-4 w-24 h-24 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity -rotate-12" />
           <div className="flex items-center justify-between mb-3">
             <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Checked Out</span>
             <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center"><Clock className="w-4 h-4 text-primary" /></div>
@@ -48,7 +52,8 @@ export default function DailyRegisterPage() {
           <p className="text-3xl font-bold text-foreground">{String(checkedOut).padStart(2, '0')}</p>
           <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground mt-1">Shift Complete</p>
         </div>
-        <div className="bg-surface-container-highest rounded-xl p-5 edge-glow">
+        <div className="bg-surface-container-highest rounded-xl p-5 edge-glow relative overflow-hidden group">
+          <HorseIcon className="absolute -right-4 -bottom-4 w-24 h-24 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity -rotate-12" />
           <div className="flex items-center justify-between mb-3">
             <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Absent</span>
             <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center"><UserX className="w-4 h-4 text-destructive" /></div>

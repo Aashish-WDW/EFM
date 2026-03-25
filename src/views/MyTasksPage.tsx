@@ -41,15 +41,15 @@ export default function MyTasksPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground tracking-tight">My Assigned Tasks</h1>
           <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">
             OBSERVED: 24 MAY 2024 &nbsp;·&nbsp; SHIFT: MORNING ALPHA
           </p>
         </div>
-        <div className="bg-surface-container-highest rounded-xl p-4 edge-glow flex items-center gap-4">
-          <div className="w-14 h-14 rounded-full border-2 border-primary flex items-center justify-center">
+        <div className="w-full lg:w-auto bg-surface-container-highest rounded-xl p-4 edge-glow flex items-center gap-4">
+          <div className="w-14 h-14 rounded-full border-2 border-primary flex items-center justify-center shrink-0">
             <span className="text-lg font-bold text-primary">78%</span>
           </div>
           <div>
@@ -60,29 +60,29 @@ export default function MyTasksPage() {
       </div>
 
       {/* Filters + Search Row */}
-      <div className="flex items-center justify-between gap-6">
-        <div className="flex gap-2">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+        <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 hide-scrollbar scroll-smooth">
           {filters.map(f => (
             <button
               key={f}
               onClick={() => setActiveFilter(f)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shrink-0 ${
                 activeFilter === f
-                  ? 'bg-primary/15 text-primary border border-primary/30'
-                  : 'bg-surface-container-high text-muted-foreground hover:text-foreground border border-transparent'
+                  ? 'bg-primary/20 text-primary border border-primary/40 shadow-[0_0_15px_-3px_rgba(var(--primary-rgb),0.2)]'
+                  : 'bg-surface-container-high text-muted-foreground hover:text-foreground border border-transparent hover:bg-surface-container-highest'
               }`}
             >
               {f}
             </button>
           ))}
         </div>
-        <div className="relative">
+        <div className="relative w-full md:w-72">
           <input
             type="text"
             placeholder="Filter task ID or horse name..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="h-10 w-72 px-4 pr-10 rounded-lg bg-surface-container-high text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
+            className="h-10 w-full px-4 pr-10 rounded-lg bg-surface-container-high text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all"
           />
           <SlidersHorizontal className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         </div>
@@ -101,27 +101,35 @@ export default function MyTasksPage() {
               task.taskType === 'Exercise' ? `20 Mins` : 'Supplies Ready';
 
             return (
-              <div key={task.id} className="bg-surface-container-high rounded-xl overflow-hidden edge-glow border border-primary/10 hover:border-primary/30 transition-colors">
-                <div className="flex">
-                  <img src={img.src} alt={task.horseName} className="w-44 h-44 object-cover shrink-0" loading="lazy" />
+              <div key={task.id} className="bg-surface-container-high rounded-xl overflow-hidden edge-glow border border-primary/10 hover:border-primary/30 transition-all duration-300 group">
+                <div className="flex flex-col sm:flex-row">
+                  <div className="relative w-full sm:w-44 h-48 sm:h-44 shrink-0 overflow-hidden">
+                    <img 
+                      src={img.src} 
+                      alt={task.horseName} 
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                      loading="lazy" 
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent sm:hidden" />
+                  </div>
                   <div className="flex-1 p-5 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <span className="px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider border border-primary/30 text-primary bg-primary/10">
                           {category}
                         </span>
-                        <span className="text-xs text-muted-foreground italic">ID: {task.id.toUpperCase()}</span>
+                        <span className="text-[10px] text-muted-foreground font-mono opacity-60">ID: {task.id.toUpperCase()}</span>
                       </div>
-                      <h3 className="text-lg font-bold text-foreground">{task.taskName}</h3>
-                      <p className="text-sm text-primary mt-0.5">{task.horseName} · {task.horseName !== 'N/A' ? `Stall ${Math.floor(Math.random() * 500)}` : 'General'}</p>
-                      <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {time}</span>
-                        <span className="flex items-center gap-1"><Package className="w-3.5 h-3.5" /> {extraInfo}</span>
+                      <h3 className="text-lg font-bold text-foreground leading-tight">{task.taskName}</h3>
+                      <p className="text-sm text-primary/90 mt-1 font-medium">{task.horseName} · {task.horseName !== 'N/A' ? `Stall ${Math.floor(Math.random() * 500)}` : 'General'}</p>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-4 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-primary/60" /> {time}</span>
+                        <span className="flex items-center gap-1.5"><Package className="w-3.5 h-3.5 text-primary/60" /> {extraInfo}</span>
                       </div>
                     </div>
-                    <div className="flex justify-end mt-3">
-                      <button className="flex items-center gap-2 px-5 py-2 rounded-lg border border-muted-foreground/30 text-sm text-foreground hover:border-primary hover:text-primary transition-colors">
-                        Start Task <Play className="w-3.5 h-3.5" />
+                    <div className="flex justify-end mt-4">
+                      <button className="flex items-center gap-2 px-6 py-2 rounded-lg border border-primary/20 bg-primary/5 text-sm font-semibold text-foreground hover:bg-primary/20 hover:border-primary/40 hover:text-primary transition-all active:scale-95 shadow-lg shadow-black/10">
+                        Start Task <Play className="w-3.5 h-3.5 fill-current" />
                       </button>
                     </div>
                   </div>
@@ -202,9 +210,9 @@ export default function MyTasksPage() {
       </div>
 
       {/* Footer */}
-      <footer className="flex items-center justify-between pt-6 border-t border-border/30 text-[10px] uppercase tracking-widest text-muted-foreground">
+      <footer className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-border/30 text-[10px] uppercase tracking-widest text-muted-foreground text-center sm:text-left">
         <span>© 2024 EFM Kinetic Observatory. All Rights Reserved.</span>
-        <div className="flex gap-6">
+        <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
           <span>Privacy Policy</span>
           <span>Terms of Service</span>
           <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-success" /> System Status</span>

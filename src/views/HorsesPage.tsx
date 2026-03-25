@@ -5,6 +5,7 @@ import { horses } from '@/data/seed';
 import FormDialog from '@/components/shared/FormDialog';
 import SelectField from '@/components/shared/SelectField';
 import DatePicker from '@/components/shared/DatePicker';
+import HorseIcon from '@/components/shared/HorseIcon';
 
 const statusStyles: Record<string, { dot: string; bg: string; text: string }> = {
   Active: { dot: 'bg-success', bg: 'bg-success/10', text: 'text-success' },
@@ -119,18 +120,22 @@ export default function HorsesPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-2 gap-4">
         {[
           { label: 'TOTAL FLEET', value: horses.length, sub: '↗ +4 this month', subColor: 'text-primary' },
           { label: 'IN TRAINING', value: 42, bar: true },
           { label: 'AVAILABLE', value: 76, sub: 'Ready for deployment', subColor: 'text-muted-foreground' },
           { label: 'IN RECOVERY', value: 10, sub: '⊘ Requires attention', subColor: 'text-destructive' },
         ].map(card => (
-          <div key={card.label} className="rounded-xl border border-border bg-card p-4 sm:p-5">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">{card.label}</p>
-            <p className="text-2xl sm:text-3xl font-bold text-foreground">{card.value}</p>
-            {card.sub && <p className={`text-xs mt-1 ${card.subColor}`}>{card.sub}</p>}
-            {card.bar && <div className="mt-3 h-1 w-2/3 bg-primary rounded-full" />}
+          <div key={card.label} className="rounded-xl border border-border bg-card p-4 sm:p-5 relative overflow-hidden group">
+            {/* Horse watermark */}
+            <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
+              <HorseIcon className="w-24 h-24" />
+            </div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1 relative z-10">{card.label}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-foreground relative z-10">{card.value}</p>
+            {card.sub && <p className={`text-[10px] font-medium uppercase tracking-wider mt-1 relative z-10 ${card.subColor}`}>{card.sub}</p>}
+            {card.bar && <div className="mt-2 h-1 w-2/3 bg-primary rounded-full relative z-10" />}
           </div>
         ))}
       </div>

@@ -53,7 +53,7 @@ export default function ReportsPage() {
       </div>
 
       {/* Report Category Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-2 gap-4">
         {reportCategories.map(cat => (
           <div key={cat.label} className="bg-surface-container-highest rounded-lg p-5 edge-glow hover:glow-primary transition-shadow cursor-pointer group">
             <div className="flex items-start justify-between mb-3">

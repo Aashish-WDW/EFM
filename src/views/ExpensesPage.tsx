@@ -49,7 +49,7 @@ export default function ExpensesPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-2 gap-4">
         <div className="bg-surface-container-highest rounded-lg p-5 edge-glow">
           <span className="label-sm text-muted-foreground">MONTHLY TOTAL SPEND</span>
           <div className="flex items-end gap-2 mt-2">

@@ -58,14 +58,14 @@ export default function FinesPage() {
       return;
     }
 
-    const newFine = {
+    const newFine: Fine = {
       id: `fine-${Date.now()}`,
       issuedAt: new Date().toISOString().split('T')[0],
       employeeName: formData.employee,
       reason: formData.reason,
       amount: parseFloat(formData.amount),
       status: 'Issued'
-    } as any;
+    };
 
     setFines(prev => [newFine, ...prev]);
     setFormData({ employee: '', reason: '', amount: '' });

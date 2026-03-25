@@ -54,7 +54,7 @@ export default function FinesPage() {
         <div className="flex gap-3 shrink-0">
           <div className="bg-surface-container-highest rounded-lg p-4 edge-glow text-center min-w-[120px]">
             <p className="label-sm text-muted-foreground">MONTHLY VOLUME</p>
-            <p className="text-xl sm:text-2xl font-bold text-foreground mono-data mt-1">AED {totalVolume.toLocaleString()}</p>
+            <p className="text-xl sm:text-2xl font-bold text-foreground mono-data mt-1">₹{totalVolume.toLocaleString()}</p>
             <span className="text-xs text-success">+12%</span>
           </div>
           <div className="bg-surface-container-highest rounded-lg p-4 edge-glow text-center min-w-[100px]">
@@ -79,7 +79,7 @@ export default function FinesPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="label-sm text-muted-foreground block mb-1.5">FINE AMOUNT</label>
-                  <input type="number" placeholder="USD 0.00" className="w-full h-10 px-3 rounded-lg bg-surface-container-high border border-border text-foreground text-sm mono-data placeholder:text-muted-foreground/50 focus:ring-1 focus:ring-primary outline-none" />
+                  <input type="number" placeholder="₹0.00" className="w-full h-10 px-3 rounded-lg bg-surface-container-high border border-border text-foreground text-sm mono-data placeholder:text-muted-foreground/50 focus:ring-1 focus:ring-primary outline-none" />
                 </div>
                 <DatePicker label="INCIDENT DATE" />
               </div>
@@ -144,7 +144,7 @@ export default function FinesPage() {
                       </div>
                     </td>
                     <td className="px-3 py-4 text-foreground max-w-[180px] truncate">{f.reason}</td>
-                    <td className="px-3 py-4 text-right mono-data font-bold text-foreground">AED {f.amount.toFixed(2)}</td>
+                    <td className="px-3 py-4 text-right mono-data font-bold text-foreground">₹{f.amount.toFixed(2)}</td>
                     <td className="px-3 py-4 text-center">
                       <span className={`px-2.5 py-1 rounded text-[10px] font-bold tracking-wider ${statusStyles[f.status]}`}>
                         {statusLabels[f.status] || f.status.toUpperCase()}

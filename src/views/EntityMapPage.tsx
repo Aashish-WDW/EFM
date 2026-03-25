@@ -216,7 +216,7 @@ export default function EntityMapPage() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <div className="w-6 h-0.5 bg-primary rounded" /><div className="w-3 h-0.5 bg-primary rounded" />
@@ -229,19 +229,19 @@ export default function EntityMapPage() {
             Interactive role hierarchy — drag nodes, zoom, and explore connections.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-3 text-xs text-muted-foreground mr-2">
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="hidden sm:flex items-center gap-3 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-primary" /> {nodes.length} Roles</span>
             <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-success" /> {teamMembers.length}+ People</span>
           </div>
-          <FormDialog 
-            open={isDialogOpen} 
+          <FormDialog
+            open={isDialogOpen}
             onOpenChange={setIsDialogOpen}
             trigger={
               <button className="h-9 px-3 rounded-lg bg-surface-container-high border border-border text-foreground hover:bg-muted transition-colors flex items-center gap-2 text-sm">
                 <Plus className="w-4 h-4" /> Add Node
               </button>
-            } 
+            }
             title="Add New Role Node"
           >
             <form onSubmit={handleAddNode} className="space-y-4 mt-2">
@@ -257,7 +257,7 @@ export default function EntityMapPage() {
       </div>
 
       {/* React Flow Canvas */}
-      <div ref={containerRef} className={`rounded-xl border border-border overflow-hidden bg-surface-container-highest ${isFullscreen ? 'w-screen h-screen rounded-none border-0' : 'h-[calc(100vh-180px)]'}`}>
+      <div ref={containerRef} className={`rounded-xl border border-border overflow-hidden bg-surface-container-highest ${isFullscreen ? 'w-screen h-screen rounded-none border-0' : 'h-[calc(100vh-260px)] sm:h-[calc(100vh-200px)]'}`}>
         <ReactFlow
           nodes={nodes}
           edges={edges}

@@ -311,7 +311,7 @@ export default function AnalysisPage() {
                 <div key={dept.department}>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">{dept.department}</span>
-                    <span className="text-xs font-mono text-foreground">${dept.value.toLocaleString()}.00</span>
+                    <span className="text-xs font-mono text-foreground">₹{dept.value.toLocaleString()}.00</span>
                   </div>
                   <div className="h-2 bg-surface-container-high rounded-full overflow-hidden">
                     <motion.div

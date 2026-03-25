@@ -85,14 +85,14 @@ export default function MeetingsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground tracking-tight">Meetings</h1>
           <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">
             Schedule and track team meetings &nbsp;·&nbsp; Shift: Morning Alpha
           </p>
         </div>
-        <div className="bg-surface-container-highest rounded-xl p-4 edge-glow flex items-center gap-4">
+        <div className="bg-surface-container-highest rounded-xl p-4 edge-glow flex items-center gap-4 shrink-0">
           <div className="w-14 h-14 rounded-full border-2 border-primary flex items-center justify-center">
             <span className="text-lg font-bold text-primary">{scheduledCount}</span>
           </div>
@@ -104,7 +104,7 @@ export default function MeetingsPage() {
       </div>
 
       {/* Filters + Search Row */}
-      <div className="flex items-center justify-between gap-6 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
         <div className="flex gap-2 flex-wrap">
           {filters.map(f => (
             <button
@@ -120,7 +120,7 @@ export default function MeetingsPage() {
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 sm:ml-auto">
           <FormDialog trigger={
             <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shrink-0">
               <Plus className="w-4 h-4" />
@@ -129,13 +129,13 @@ export default function MeetingsPage() {
           } title="Schedule Meeting">
             <StartMeetingForm />
           </FormDialog>
-          <div className="relative">
+          <div className="relative flex-1 sm:flex-none">
             <input
               type="text"
               placeholder="Filter meetings..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="h-10 w-72 px-4 pr-10 rounded-lg bg-surface-container-high text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
+              className="h-10 w-full sm:w-64 px-4 pr-10 rounded-lg bg-surface-container-high text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
             />
             <SlidersHorizontal className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           </div>
@@ -206,7 +206,7 @@ export default function MeetingsPage() {
                   <span className="text-xs text-muted-foreground italic">ID: {m.id.toUpperCase()}</span>
                 </div>
                 <h3 className="text-lg font-bold text-foreground">{m.title}</h3>
-                <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-3 mt-3 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {m.date}</span>
                   <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {m.time}</span>
                   <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {m.attendees.length} attendees</span>

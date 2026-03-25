@@ -40,14 +40,14 @@ export default function GroceriesInventoryPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between">
         <div>
           <p className="label-sm text-primary tracking-widest">SUPPLY CHAIN INTELLIGENCE</p>
           <h1 className="display-sm text-foreground mt-1">Groceries Inventory</h1>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 shrink-0">
           <button className="h-9 px-4 rounded-lg border border-border text-foreground text-sm font-medium flex items-center gap-2 hover:bg-surface-container-high transition-colors">
-            <Upload className="w-4 h-4" /> Export Report
+            <Upload className="w-4 h-4" /> <span className="hidden sm:inline">Export Report</span><span className="sm:hidden">Export</span>
           </button>
           <button className="h-9 px-4 rounded-lg bg-gradient-to-r from-primary to-primary-dim text-primary-foreground text-sm font-medium flex items-center gap-2">
             <Plus className="w-4 h-4" /> New Purchase
@@ -70,7 +70,7 @@ export default function GroceriesInventoryPage() {
             <span className="label-sm text-muted-foreground">INVENTORY VALUE</span>
             <DollarSign className="w-5 h-5 text-muted-foreground/50" />
           </div>
-          <p className="display-sm text-foreground mono-data">AED {totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+          <p className="display-sm text-foreground mono-data">₹{totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
           <p className="text-xs text-primary mt-2 flex items-center gap-1"><RefreshCw className="w-3 h-3" /> Real-time valuation</p>
         </div>
         <div className="bg-surface-container-highest rounded-lg p-5 edge-glow">
@@ -115,7 +115,7 @@ export default function GroceriesInventoryPage() {
                 </div>
               </div>
               <div>
-                <label className="label-sm text-muted-foreground block mb-1.5">UNIT PRICE ($)</label>
+                <label className="label-sm text-muted-foreground block mb-1.5">UNIT PRICE (₹)</label>
                 <input type="number" placeholder="0.00" className="w-full h-10 px-3 rounded-lg bg-surface-container-high border border-border text-foreground text-sm mono-data placeholder:text-muted-foreground/50 focus:ring-1 focus:ring-primary outline-none" />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -146,7 +146,7 @@ export default function GroceriesInventoryPage() {
 
         {/* Inventory Table */}
         <div className="lg:col-span-8 order-1 lg:order-2">
-          <div className="bg-surface-container-highest rounded-lg edge-glow">
+          <div className="bg-surface-container-highest rounded-lg edge-glow overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <div className="flex items-center gap-3">
                 <h2 className="heading-md text-foreground uppercase tracking-wider">Current Inventory Clusters</h2>
@@ -157,7 +157,7 @@ export default function GroceriesInventoryPage() {
                 <button className="p-2 rounded-lg hover:bg-surface-container-high text-muted-foreground"><SlidersHorizontal className="w-4 h-4" /></button>
               </div>
             </div>
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto"><table className="w-full text-sm min-w-[640px]">
               <thead>
                 <tr className="border-b border-border">
                   <th className="px-5 py-3 text-left label-sm text-muted-foreground">ITEM NAME</th>
@@ -180,7 +180,7 @@ export default function GroceriesInventoryPage() {
                       </td>
                       <td className="px-3 py-4 text-center mono-data text-foreground">{g.quantity.toFixed(1)}</td>
                       <td className="px-3 py-4 text-muted-foreground">{g.unit}</td>
-                      <td className="px-3 py-4 mono-data font-semibold text-foreground">AED {g.pricePerUnit.toFixed(2)}</td>
+                      <td className="px-3 py-4 mono-data font-semibold text-foreground">₹{g.pricePerUnit.toFixed(2)}</td>
                       <td className="px-3 py-4 mono-data text-xs text-muted-foreground">{g.purchaseDate}</td>
                       <td className="px-3 py-4 mono-data text-xs text-muted-foreground">{g.expiryDate}</td>
                       <td className="px-3 py-4 text-right">
@@ -190,7 +190,7 @@ export default function GroceriesInventoryPage() {
                   );
                 })}
               </tbody>
-            </table>
+            </table></div>
             <div className="flex items-center justify-between px-5 py-3 border-t border-border">
               <span className="text-xs text-muted-foreground">Showing {(page - 1) * perPage + 1}-{Math.min(page * perPage, groceryItems.length)} of {groceryItems.length} items</span>
               <div className="flex gap-1">
@@ -204,7 +204,7 @@ export default function GroceriesInventoryPage() {
           </div>
 
           {/* Bottom Widgets */}
-          <div className="grid grid-cols-2 gap-4 mt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
             <div className="bg-surface-container-highest rounded-lg p-5 edge-glow">
               <div className="flex items-center gap-2 mb-4">
                 <RefreshCw className="w-4 h-4 text-primary" />

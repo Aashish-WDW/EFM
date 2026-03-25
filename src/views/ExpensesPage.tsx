@@ -53,7 +53,7 @@ export default function ExpensesPage() {
         <div className="bg-surface-container-highest rounded-lg p-5 edge-glow">
           <span className="label-sm text-muted-foreground">MONTHLY TOTAL SPEND</span>
           <div className="flex items-end gap-2 mt-2">
-            <p className="text-2xl font-bold text-foreground mono-data">AED {total.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-foreground mono-data">₹{total.toLocaleString()}</p>
             <span className="text-xs text-success font-medium mb-1">+12.4%</span>
           </div>
           <div className="w-full h-1 bg-primary/20 rounded-full mt-3"><div className="h-full w-3/4 bg-primary rounded-full" /></div>
@@ -70,7 +70,7 @@ export default function ExpensesPage() {
         </div>
         <div className="bg-surface-container-highest rounded-lg p-5 edge-glow">
           <span className="label-sm text-muted-foreground">FORECAST VARIANCE</span>
-          <p className="text-2xl font-bold text-success mono-data mt-2">-AED 1,204</p>
+          <p className="text-2xl font-bold text-success mono-data mt-2">-₹1,204</p>
           <p className="text-xs text-muted-foreground mt-1">Under budget for Q3</p>
         </div>
       </div>
@@ -114,7 +114,7 @@ export default function ExpensesPage() {
                       </span>
                     </td>
                     <td className="px-3 py-4 font-medium text-foreground">{e.description}</td>
-                    <td className="px-3 py-4 text-right mono-data font-bold text-foreground">AED {e.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                    <td className="px-3 py-4 text-right mono-data font-bold text-foreground">₹{e.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                     <td className="px-3 py-4">
                       <div className="flex items-center gap-2">
                         {e.horseName !== 'N/A' && e.horseName !== 'General' && e.horseName !== 'Multiple' && (
@@ -166,7 +166,7 @@ export default function ExpensesPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="label-sm text-primary block mb-1.5">AMOUNT (USD)</label>
+                  <label className="label-sm text-primary block mb-1.5">AMOUNT (₹)</label>
                   <input type="number" placeholder="0.00" className="w-full h-10 px-3 rounded-lg bg-surface-container-high border border-border text-foreground text-sm mono-data focus:ring-1 focus:ring-primary outline-none" />
                 </div>
                 <div>

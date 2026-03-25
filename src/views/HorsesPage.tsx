@@ -1,11 +1,12 @@
 'use client';
-import { useState, useMemo } from 'react';
-import { Search, Download, Plus, SlidersHorizontal, Filter, ChevronLeft, ChevronRight, Zap, BarChart3, ShieldCheck, ClipboardList, MoreVertical } from 'lucide-react';
+import { useState, useMemo, useRef } from 'react';
+import { Search, Download, Plus, SlidersHorizontal, ChevronLeft, ChevronRight, Zap, BarChart3, ShieldCheck, ClipboardList, MoreVertical, Upload, X, Pencil, Trash2 } from 'lucide-react';
 import { horses } from '@/data/seed';
 import FormDialog from '@/components/shared/FormDialog';
 import SelectField from '@/components/shared/SelectField';
 import DatePicker from '@/components/shared/DatePicker';
 import HorseIcon from '@/components/shared/HorseIcon';
+import RandomLetterReveal from '@/components/shared/RandomLetterReveal';
 
 const statusStyles: Record<string, { dot: string; bg: string; text: string }> = {
   Active: { dot: 'bg-success', bg: 'bg-success/10', text: 'text-success' },
@@ -13,6 +14,9 @@ const statusStyles: Record<string, { dot: string; bg: string; text: string }> = 
   Medical: { dot: 'bg-destructive', bg: 'bg-destructive/10', text: 'text-destructive' },
   Retired: { dot: 'bg-muted-foreground', bg: 'bg-muted', text: 'text-muted-foreground' },
 };
+
+const inp = 'w-full h-10 px-3 rounded-lg bg-surface-container-high border border-border text-foreground text-sm placeholder:text-muted-foreground/50 focus:ring-1 focus:ring-primary outline-none';
+const lbl = 'label-sm text-muted-foreground block mb-1.5';
 
 function PerformanceBar({ value }: { value: number }) {
   const bars = 5;
@@ -29,38 +33,78 @@ function PerformanceBar({ value }: { value: number }) {
   );
 }
 
+function PhotoUpload({ label }: { label: string }) {
+  const [preview, setPreview] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) setPreview(URL.createObjectURL(file));
+  };
+
+  return (
+    <div>
+      <label className={lbl}>{label}</label>
+      <div className="flex items-center gap-4">
+        <div
+          onClick={() => fileRef.current?.click()}
+          className="w-16 h-16 rounded-lg border-2 border-dashed border-border bg-surface-container-high flex items-center justify-center cursor-pointer hover:border-primary transition-colors shrink-0 overflow-hidden"
+        >
+          {preview ? (
+            <img src={preview} alt="preview" className="w-full h-full object-cover" />
+          ) : (
+            <Upload className="w-5 h-5 text-muted-foreground" />
+          )}
+        </div>
+        <div>
+          <p className="text-sm text-foreground font-medium">Horse Photo</p>
+          <p className="text-xs text-muted-foreground">JPG, PNG or WEBP · max 5 MB</p>
+          <button type="button" onClick={() => fileRef.current?.click()} className="mt-1 text-xs text-primary font-medium hover:underline">
+            {preview ? 'Change photo' : 'Upload photo'}
+          </button>
+          {preview && (
+            <button type="button" onClick={() => setPreview(null)} className="ml-2 text-xs text-destructive hover:underline">Remove</button>
+          )}
+        </div>
+        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+      </div>
+    </div>
+  );
+}
+
 function AddHorseForm() {
   return (
     <div className="space-y-4 mt-2">
+      <PhotoUpload label="HORSE PHOTO" />
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="label-sm text-muted-foreground block mb-1.5">HORSE NAME</label>
-          <input type="text" placeholder="e.g. Thunderbolt" className="w-full h-10 px-3 rounded-lg bg-surface-container-high border border-border text-foreground text-sm placeholder:text-muted-foreground/50 focus:ring-1 focus:ring-primary outline-none" />
+          <label className={lbl}>HORSE NAME</label>
+          <input type="text" placeholder="e.g. Thunderbolt" className={inp} />
         </div>
         <div>
-          <label className="label-sm text-muted-foreground block mb-1.5">PASSPORT NO</label>
-          <input type="text" placeholder="EQ-XXXX-XXXX" className="w-full h-10 px-3 rounded-lg bg-surface-container-high border border-border text-foreground text-sm mono-data placeholder:text-muted-foreground/50 focus:ring-1 focus:ring-primary outline-none" />
+          <label className={lbl}>PASSPORT NO</label>
+          <input type="text" placeholder="EQ-XXXX-XXXX" className={`${inp} mono-data`} />
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="label-sm text-muted-foreground block mb-1.5">BREED</label>
-          <input type="text" placeholder="e.g. Thoroughbred" className="w-full h-10 px-3 rounded-lg bg-surface-container-high border border-border text-foreground text-sm placeholder:text-muted-foreground/50 focus:ring-1 focus:ring-primary outline-none" />
+          <label className={lbl}>BREED</label>
+          <input type="text" placeholder="e.g. Thoroughbred" className={inp} />
         </div>
         <div>
-          <label className="label-sm text-muted-foreground block mb-1.5">COLOR</label>
-          <input type="text" placeholder="e.g. Bay" className="w-full h-10 px-3 rounded-lg bg-surface-container-high border border-border text-foreground text-sm placeholder:text-muted-foreground/50 focus:ring-1 focus:ring-primary outline-none" />
+          <label className={lbl}>COLOR</label>
+          <input type="text" placeholder="e.g. Bay" className={inp} />
         </div>
       </div>
       <div className="grid grid-cols-3 gap-3">
         <SelectField label="GENDER" options={['Stallion', 'Mare']} defaultValue="Stallion" />
         <div>
-          <label className="label-sm text-muted-foreground block mb-1.5">HEIGHT (hh)</label>
-          <input type="text" placeholder="16.0" className="w-full h-10 px-3 rounded-lg bg-surface-container-high border border-border text-foreground text-sm mono-data placeholder:text-muted-foreground/50 focus:ring-1 focus:ring-primary outline-none" />
+          <label className={lbl}>HEIGHT (hh)</label>
+          <input type="text" placeholder="16.0" className={`${inp} mono-data`} />
         </div>
         <div>
-          <label className="label-sm text-muted-foreground block mb-1.5">STABLE #</label>
-          <input type="text" placeholder="ST-XX" className="w-full h-10 px-3 rounded-lg bg-surface-container-high border border-border text-foreground text-sm mono-data placeholder:text-muted-foreground/50 focus:ring-1 focus:ring-primary outline-none" />
+          <label className={lbl}>STABLE #</label>
+          <input type="text" placeholder="ST-XX" className={`${inp} mono-data`} />
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
@@ -75,11 +119,108 @@ function AddHorseForm() {
   );
 }
 
-import RandomLetterReveal from '@/components/shared/RandomLetterReveal';
+function EditHorseForm({ horse }: { horse: typeof horses[0] }) {
+  return (
+    <div className="space-y-4 mt-2">
+      <PhotoUpload label="HORSE PHOTO" />
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className={lbl}>HORSE NAME</label>
+          <input type="text" defaultValue={horse.name} className={inp} />
+        </div>
+        <div>
+          <label className={lbl}>PASSPORT NO</label>
+          <input type="text" defaultValue={horse.passportNo} className={`${inp} mono-data`} />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className={lbl}>BREED</label>
+          <input type="text" defaultValue={horse.breed} className={inp} />
+        </div>
+        <div>
+          <label className={lbl}>COLOR</label>
+          <input type="text" placeholder="e.g. Bay" className={inp} />
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        <SelectField label="GENDER" options={['Stallion', 'Mare']} defaultValue="Stallion" />
+        <div>
+          <label className={lbl}>HEIGHT (hh)</label>
+          <input type="text" placeholder="16.0" className={`${inp} mono-data`} />
+        </div>
+        <div>
+          <label className={lbl}>STABLE #</label>
+          <input type="text" placeholder="ST-XX" className={`${inp} mono-data`} />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <DatePicker label="DATE OF BIRTH" />
+        <SelectField label="STATUS" options={['Active', 'Resting', 'Medical', 'Retired']} defaultValue={horse.status} />
+      </div>
+      <SelectField label="ASSIGNED MANAGER" options={['Emma Manager', 'Dr. Director']} defaultValue={horse.assignedManager} />
+      <button className="w-full h-10 rounded-lg bg-gradient-to-r from-primary to-primary-dim text-primary-foreground text-sm font-semibold tracking-wider uppercase">
+        SAVE CHANGES
+      </button>
+    </div>
+  );
+}
+
+function HorseFilterPanel({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="border-t border-border bg-surface-container-low px-4 sm:px-6 py-4">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Filter Options</span>
+        <button onClick={onClose} className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"><X className="w-3.5 h-3.5" /></button>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <SelectField label="STATUS" options={['All', 'Active', 'Resting', 'Medical', 'Retired']} defaultValue="All" />
+        <SelectField label="GENDER" options={['All', 'Stallion', 'Mare']} defaultValue="All" />
+        <SelectField label="MANAGER" options={['All', 'Emma Manager', 'Dr. Director']} defaultValue="All" />
+        <div className="flex items-end">
+          <button className="w-full h-10 rounded-lg bg-primary text-primary-foreground text-xs font-semibold tracking-wider uppercase">Apply</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HorseRowActions({ horse }: { horse: typeof horses[0] }) {
+  const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <button onClick={() => setOpen(o => !o)} className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+        <MoreVertical className="w-4 h-4" />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-7 z-20 w-36 rounded-lg border border-border bg-surface-container-highest shadow-lg py-1 text-sm">
+            <button
+              onClick={() => { setOpen(false); setEditOpen(true); }}
+              className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted transition-colors text-foreground"
+            >
+              <Pencil className="w-3.5 h-3.5 text-primary" /> Edit
+            </button>
+            <button className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted transition-colors text-destructive">
+              <Trash2 className="w-3.5 h-3.5" /> Delete
+            </button>
+          </div>
+        </>
+      )}
+      <FormDialog open={editOpen} onOpenChange={setEditOpen} trigger={<span />} title={`Edit — ${horse.name}`}>
+        <EditHorseForm horse={horse} />
+      </FormDialog>
+    </div>
+  );
+}
 
 export default function HorsesPage() {
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
   const pageSize = 4;
   const getPerf = (id: string) => { const n = parseInt(id.replace(/\D/g, ''), 10); return 40 + (n * 17 + 13) % 61; };
   const filtered = useMemo(() => horses.filter(h => h.name.toLowerCase().includes(search.toLowerCase())), [search]);
@@ -128,7 +269,6 @@ export default function HorsesPage() {
           { label: 'IN RECOVERY', value: 10, sub: '⊘ Requires attention', subColor: 'text-destructive' },
         ].map(card => (
           <div key={card.label} className="rounded-xl border border-border bg-card p-4 sm:p-5 relative overflow-hidden group">
-            {/* Horse watermark */}
             <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
               <HorseIcon className="w-24 h-24" />
             </div>
@@ -142,13 +282,37 @@ export default function HorsesPage() {
 
       {/* Table */}
       <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <div className="flex items-center justify-between px-4 sm:px-6 py-4">
-          <h2 className="text-lg font-bold text-foreground">Active Directory</h2>
+        {/* Toolbar */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 px-4 sm:px-6 py-4">
           <div className="flex items-center gap-2">
-            <button className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"><Filter className="w-4 h-4" /></button>
-            <button className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"><SlidersHorizontal className="w-4 h-4" /></button>
+            <h2 className="text-lg font-bold text-foreground shrink-0">Active Directory</h2>
           </div>
+          <div className="flex-1 flex items-center gap-2 px-4 h-11 rounded-lg border border-border bg-background">
+            <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+            <input
+              type="text"
+              placeholder="Search horses by name..."
+              value={search}
+              onChange={e => { setSearch(e.target.value); setPage(0); }}
+              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none h-full"
+            />
+            {search && (
+              <button onClick={() => { setSearch(''); setPage(0); }} className="text-muted-foreground hover:text-foreground">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+          <button
+            onClick={() => setShowFilters(f => !f)}
+            className={`h-11 w-11 rounded-lg border flex items-center justify-center transition-colors shrink-0 ${showFilters ? 'bg-primary border-primary text-primary-foreground' : 'border-border text-muted-foreground hover:text-foreground hover:bg-muted'}`}
+          >
+            <SlidersHorizontal className="w-4 h-4" />
+          </button>
         </div>
+
+        {/* Filter Panel */}
+        {showFilters && <HorseFilterPanel onClose={() => setShowFilters(false)} />}
+
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[700px]">
             <thead>
@@ -194,7 +358,7 @@ export default function HorsesPage() {
                     </td>
                     <td className="px-4 sm:px-6 py-4 hidden lg:table-cell"><PerformanceBar value={getPerf(horse.id)} /></td>
                     <td className="px-4 sm:px-6 py-4">
-                      <button className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"><MoreVertical className="w-4 h-4" /></button>
+                      <HorseRowActions horse={horse} />
                     </td>
                   </tr>
                 );

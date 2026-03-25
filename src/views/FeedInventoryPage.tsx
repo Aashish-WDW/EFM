@@ -1,9 +1,9 @@
 'use client';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { feedInventory } from '@/data/seed';
 import FormDialog from '@/components/shared/FormDialog';
 import SelectField from '@/components/shared/SelectField';
-import { Package, AlertTriangle, TrendingDown, SlidersHorizontal, Download, Plus } from 'lucide-react';
+import { Package, AlertTriangle, TrendingDown, SlidersHorizontal, Download, Plus, Search, X, Pencil, Trash2 } from 'lucide-react';
 import DatePicker from '@/components/shared/DatePicker';
 
 const inp = 'w-full h-10 px-3 rounded-lg bg-surface-container-high border border-border text-foreground text-sm placeholder:text-muted-foreground/50 focus:ring-1 focus:ring-primary outline-none';
@@ -36,7 +36,7 @@ function AddFeedRecordForm() {
           <input type="number" placeholder="0" className={inp} />
         </div>
         <div>
-          <label className={lbl}>COST PER UNIT (AED)</label>
+          <label className={lbl}>COST PER UNIT (₹)</label>
           <input type="number" placeholder="0.00" className={inp} />
         </div>
       </div>
@@ -46,11 +46,104 @@ function AddFeedRecordForm() {
   );
 }
 
+type FeedItem = typeof feedInventory[0];
+
+function EditFeedRecordForm({ item }: { item: FeedItem }) {
+  return (
+    <div className="space-y-4 mt-2">
+      <div>
+        <label className={lbl}>FEED TYPE</label>
+        <input type="text" defaultValue={item.feedType} className={inp} />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className={lbl}>UNITS LEFT</label>
+          <input type="number" defaultValue={item.unitsLeft} className={inp} />
+        </div>
+        <SelectField label="UNIT TYPE" options={['kg', 'bales', 'bags', 'liters']} defaultValue={item.unit} />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className={lbl}>TOTAL AVAILABLE</label>
+          <input type="number" defaultValue={item.totalAvailable} className={inp} />
+        </div>
+        <div>
+          <label className={lbl}>REORDER THRESHOLD</label>
+          <input type="number" defaultValue={item.threshold} className={inp} />
+        </div>
+      </div>
+      <SelectField label="STATUS" options={['In Stock', 'Low Stock', 'Out of Stock']} defaultValue={item.status} />
+      <button className="w-full h-10 rounded-lg bg-gradient-to-r from-primary to-primary-dim text-primary-foreground text-sm font-semibold tracking-wider uppercase">Save Changes</button>
+    </div>
+  );
+}
+
+function FilterPanel({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="border-b border-border bg-surface-container-low px-4 sm:px-6 py-4">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Filter Options</span>
+        <button onClick={onClose} className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"><X className="w-3.5 h-3.5" /></button>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <SelectField label="STATUS" options={['All', 'In Stock', 'Low Stock', 'Out of Stock']} defaultValue="All" />
+        <SelectField label="UNIT TYPE" options={['All', 'kg', 'bales', 'bags', 'liters']} defaultValue="All" />
+        <SelectField label="SORT BY" options={['Stock Level', 'Name', 'Used Today']} defaultValue="Stock Level" />
+        <div className="flex items-end">
+          <button className="w-full h-10 rounded-lg bg-primary text-primary-foreground text-xs font-semibold tracking-wider uppercase">Apply</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RowActions({ item }: { item: FeedItem }) {
+  const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <button onClick={() => setOpen(o => !o)} className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+        <SlidersHorizontal className="w-4 h-4" />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-7 z-20 w-36 rounded-lg border border-border bg-surface-container-highest shadow-lg py-1 text-sm">
+            <button
+              onClick={() => { setOpen(false); setEditOpen(true); }}
+              className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted transition-colors text-foreground"
+            >
+              <Pencil className="w-3.5 h-3.5 text-primary" /> Edit
+            </button>
+            <button className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted transition-colors text-destructive">
+              <Trash2 className="w-3.5 h-3.5" /> Delete
+            </button>
+          </div>
+        </>
+      )}
+      <FormDialog open={editOpen} onOpenChange={setEditOpen} trigger={<span />} title={`Edit — ${item.feedType}`}>
+        <EditFeedRecordForm item={item} />
+      </FormDialog>
+    </div>
+  );
+}
+
 export default function FeedInventoryPage() {
   const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
   const perPage = 5;
-  const totalPages = Math.ceil(feedInventory.length / perPage);
-  const paginated = feedInventory.slice((currentPage - 1) * perPage, currentPage * perPage);
+
+  const filteredItems = useMemo(() =>
+    feedInventory.filter(f =>
+      f.feedType.toLowerCase().includes(search.toLowerCase()) ||
+      f.unit.toLowerCase().includes(search.toLowerCase()) ||
+      f.status.toLowerCase().includes(search.toLowerCase())
+    ), [search]);
+
+  const totalPages = Math.ceil(filteredItems.length / perPage);
+  const paginated = filteredItems.slice((currentPage - 1) * perPage, currentPage * perPage);
 
   const totalUnits = feedInventory.reduce((s, f) => s + f.unitsLeft, 0);
   const lowStockCount = feedInventory.filter(f => f.status !== 'In Stock').length;
@@ -70,7 +163,9 @@ export default function FeedInventoryPage() {
           <p className="text-sm text-muted-foreground mt-1">Manage and track feed stock levels across all stable operations.</p>
         </div>
         <div className="flex gap-2 shrink-0">
-          <button className="h-10 px-4 sm:px-5 rounded-lg border border-border text-foreground text-sm font-medium hover:bg-surface-container-high transition-colors">Export Report</button>
+          <button className="h-10 px-4 sm:px-5 rounded-lg border border-border text-foreground text-sm font-medium hover:bg-surface-container-high transition-colors flex items-center gap-2">
+            <Download className="w-4 h-4" /> Export
+          </button>
           <FormDialog trigger={
             <button className="h-10 px-4 sm:px-5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:brightness-110 transition-all flex items-center gap-2">
               <Plus className="w-4 h-4" /> Add Record
@@ -94,55 +189,74 @@ export default function FeedInventoryPage() {
       </div>
 
       <div className="bg-surface-container-highest rounded-xl edge-glow overflow-hidden">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between px-3 sm:px-6 py-3 sm:py-4 border-b border-border gap-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-high text-sm text-foreground">
-              <SlidersHorizontal className="w-3.5 h-3.5" /> All Types <span className="text-muted-foreground">▾</span>
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-high text-sm text-foreground">
-              <SlidersHorizontal className="w-3.5 h-3.5" /> Sort by: Stock Level <span className="text-muted-foreground">▾</span>
-            </div>
+        {/* Toolbar */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-4 sm:px-6 py-4 border-b border-border">
+          <div className="flex-1 flex items-center gap-2 px-4 h-11 rounded-lg border border-border bg-background">
+            <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+            <input
+              type="text"
+              placeholder="Search by feed type, unit, or status..."
+              value={search}
+              onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
+              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none h-full"
+            />
+            {search && (
+              <button onClick={() => { setSearch(''); setCurrentPage(1); }} className="text-muted-foreground hover:text-foreground">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
-          <span className="text-xs text-muted-foreground mono-data uppercase tracking-wider hidden sm:block">Displaying {feedInventory.length} of {feedInventory.length} records</span>
+          <button
+            onClick={() => setShowFilters(f => !f)}
+            className={`h-11 px-4 rounded-lg border flex items-center gap-2 text-sm font-medium transition-colors shrink-0 ${showFilters ? 'bg-primary border-primary text-primary-foreground' : 'border-border text-muted-foreground hover:text-foreground hover:bg-muted'}`}
+          >
+            <SlidersHorizontal className="w-4 h-4" /> Filters
+          </button>
+          <span className="text-xs text-muted-foreground mono-data uppercase tracking-wider hidden sm:block shrink-0">{filteredItems.length} of {feedInventory.length} records</span>
         </div>
+
+        {/* Filter Panel */}
+        {showFilters && <FilterPanel onClose={() => setShowFilters(false)} />}
+
         <div className="overflow-x-auto">
-        <table className="w-full min-w-[650px]">
-          <thead>
-            <tr className="border-b border-border">
-              {['FEED TYPE', 'UNIT', 'AVAILABLE', 'USED TODAY', 'REMAINING', 'THRESHOLD', 'STATUS'].map(h => (
-                <th key={h} className="px-6 py-3 text-left text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {paginated.map(f => (
-              <tr key={f.id} className="border-b border-border/50 hover:bg-surface-container-high/50 transition-colors">
-                <td className="px-6 py-4 font-semibold text-sm text-foreground">{f.feedType}</td>
-                <td className="px-6 py-4 text-sm text-muted-foreground">{f.unit}</td>
-                <td className="px-6 py-4 mono-data text-sm">{f.totalAvailable}</td>
-                <td className="px-6 py-4 mono-data text-sm">{f.usedToday}</td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2">
-                    <span className="mono-data text-sm">{f.unitsLeft}</span>
-                    <div className="w-16 h-1.5 rounded-full bg-surface-container overflow-hidden">
-                      <div className={`h-full rounded-full ${f.unitsLeft <= f.threshold ? 'bg-destructive' : f.unitsLeft <= f.threshold * 2 ? 'bg-warning' : 'bg-success'}`} style={{ width: `${Math.min((f.unitsLeft / f.totalAvailable) * 100, 100)}%` }} />
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 mono-data text-sm text-muted-foreground">{f.threshold}</td>
-                <td className="px-6 py-4">
-                  <span className={`inline-flex items-center gap-1.5 text-xs font-semibold uppercase ${f.status === 'In Stock' ? 'text-success' : f.status === 'Low Stock' ? 'text-warning' : 'text-destructive'}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${f.status === 'In Stock' ? 'bg-success' : f.status === 'Low Stock' ? 'bg-warning' : 'bg-destructive'}`} />
-                    {f.status}
-                  </span>
-                </td>
+          <table className="w-full min-w-[650px]">
+            <thead>
+              <tr className="border-b border-border">
+                {['FEED TYPE', 'UNIT', 'AVAILABLE', 'USED TODAY', 'REMAINING', 'THRESHOLD', 'STATUS', ''].map(h => (
+                  <th key={h} className="px-6 py-3 text-left text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">{h}</th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {paginated.map(f => (
+                <tr key={f.id} className="border-b border-border/50 hover:bg-surface-container-high/50 transition-colors">
+                  <td className="px-6 py-4 font-semibold text-sm text-foreground">{f.feedType}</td>
+                  <td className="px-6 py-4 text-sm text-muted-foreground">{f.unit}</td>
+                  <td className="px-6 py-4 mono-data text-sm">{f.totalAvailable}</td>
+                  <td className="px-6 py-4 mono-data text-sm">{f.usedToday}</td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <span className="mono-data text-sm">{f.unitsLeft}</span>
+                      <div className="w-16 h-1.5 rounded-full bg-surface-container overflow-hidden">
+                        <div className={`h-full rounded-full ${f.unitsLeft <= f.threshold ? 'bg-destructive' : f.unitsLeft <= f.threshold * 2 ? 'bg-warning' : 'bg-success'}`} style={{ width: `${Math.min((f.unitsLeft / f.totalAvailable) * 100, 100)}%` }} />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 mono-data text-sm text-muted-foreground">{f.threshold}</td>
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex items-center gap-1.5 text-xs font-semibold uppercase ${f.status === 'In Stock' ? 'text-success' : f.status === 'Low Stock' ? 'text-warning' : 'text-destructive'}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${f.status === 'In Stock' ? 'bg-success' : f.status === 'Low Stock' ? 'bg-warning' : 'bg-destructive'}`} />
+                      {f.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4"><RowActions item={f} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
         <div className="flex items-center justify-between px-3 sm:px-6 py-3 border-t border-border">
-          <span className="text-xs text-muted-foreground mono-data hidden sm:block">Displaying {paginated.length} of {feedInventory.length} records</span>
+          <span className="text-xs text-muted-foreground mono-data hidden sm:block">Showing {paginated.length} of {filteredItems.length} records</span>
           <div className="flex items-center gap-2">
             <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-30">Previous</button>
             {Array.from({ length: totalPages }, (_, i) => (

@@ -79,7 +79,7 @@ export default function InvoicesPage() {
           <div className="bg-surface-container-highest rounded-lg p-5 edge-glow border-l-2 border-primary">
             <p className="label-sm text-primary mb-1">ESTIMATED TOTAL</p>
             <div className="flex items-end justify-between">
-              <p className="text-3xl font-bold text-foreground mono-data">AED {subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+              <p className="text-3xl font-bold text-foreground mono-data">₹{subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
               <TrendingUp className="w-8 h-8 text-primary/30" />
             </div>
             <p className="text-xs text-success mt-2">+12% vs last period</p>
@@ -154,8 +154,8 @@ export default function InvoicesPage() {
                         <span className="text-xs text-muted-foreground">{s.detail}</span>
                       </td>
                       <td className="py-3 text-right mono-data text-foreground">{s.qty.toFixed(1)}</td>
-                      <td className="py-3 text-right mono-data text-foreground">AED {s.rate.toFixed(2)}</td>
-                      <td className="py-3 text-right mono-data font-semibold text-foreground">AED {s.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                      <td className="py-3 text-right mono-data text-foreground">₹{s.rate.toFixed(2)}</td>
+                      <td className="py-3 text-right mono-data font-semibold text-foreground">₹{s.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -166,15 +166,15 @@ export default function InvoicesPage() {
               <div className="border-t border-border pt-4 space-y-2">
                 <div className="flex justify-between text-sm text-muted-foreground">
                   <span>Subtotal</span>
-                  <span className="mono-data">AED {subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                  <span className="mono-data">₹{subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div className="flex justify-between text-sm text-muted-foreground">
                   <span>Tax (0%)</span>
-                  <span className="mono-data">AED 0.00</span>
+                  <span className="mono-data">₹0.00</span>
                 </div>
                 <div className="border-t border-border pt-2 flex justify-between">
                   <span className="text-primary font-bold">TOTAL</span>
-                  <span className="text-xl mono-data font-bold text-foreground">AED {subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                  <span className="text-xl mono-data font-bold text-foreground">₹{subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                 </div>
               </div>
 

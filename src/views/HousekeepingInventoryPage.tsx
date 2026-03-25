@@ -35,7 +35,7 @@ function AddHousekeepingItemForm() {
           <input type="number" placeholder="0" className={inp} />
         </div>
         <div>
-          <label className={lbl}>COST PER UNIT (AED)</label>
+          <label className={lbl}>COST PER UNIT (₹)</label>
           <input type="number" placeholder="0.00" className={inp} />
         </div>
       </div>
@@ -97,7 +97,7 @@ export default function HousekeepingInventoryPage() {
             <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Inventory Value</span>
             <div className="w-9 h-9 rounded-lg bg-success/10 flex items-center justify-center"><DollarSign className="w-4 h-4 text-success" /></div>
           </div>
-          <p className="text-3xl font-bold text-foreground"><span className="text-lg text-muted-foreground">AED </span>{totalValue.toLocaleString()}</p>
+          <p className="text-3xl font-bold text-foreground"><span className="text-lg text-muted-foreground">₹</span>{totalValue.toLocaleString()}</p>
         </div>
         <div className="bg-surface-container-highest rounded-xl p-5 edge-glow">
           <div className="flex items-center justify-between mb-3">
@@ -157,7 +157,7 @@ export default function HousekeepingInventoryPage() {
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">{h.usageArea}</td>
                     <td className="px-4 py-3 text-muted-foreground">{h.storageLocation}</td>
-                    <td className="px-4 py-3 font-mono text-xs">AED {h.costPerUnit}</td>
+                    <td className="px-4 py-3 font-mono text-xs">₹{h.costPerUnit}</td>
                     <td className="px-4 py-3">
                       {h.reorderAlertEnabled
                         ? <span className="text-success text-xs font-medium">✓ On</span>

@@ -9,7 +9,8 @@
       "Bash(mv temp:*)",
       "Bash(npm install:*)",
       "Read(//dev/**)",
-      "Bash(find /d/code/lookaround/src -type f \\\\\\(-name *.tsx -o -name *.ts \\\\\\))"
+      "Bash(find /d/code/lookaround/src -type f \\\\\\(-name *.tsx -o -name *.ts \\\\\\))",
+      "Bash(ls d:/code/frontend-first-data/src/app/\\\\\\(app\\\\\\)/)"
     ]
   }
 }

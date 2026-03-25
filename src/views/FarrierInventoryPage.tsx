@@ -1,9 +1,9 @@
 'use client';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { farrierInventoryItems } from '@/data/seed';
 import FormDialog from '@/components/shared/FormDialog';
 import SelectField from '@/components/shared/SelectField';
-import { Package, AlertTriangle, Wrench, SlidersHorizontal, Plus } from 'lucide-react';
+import { Package, AlertTriangle, Wrench, SlidersHorizontal, Plus, Search, X, Pencil, Trash2 } from 'lucide-react';
 import DatePicker from '@/components/shared/DatePicker';
 
 const inp = 'w-full h-10 px-3 rounded-lg bg-surface-container-high border border-border text-foreground text-sm placeholder:text-muted-foreground/50 focus:ring-1 focus:ring-primary outline-none';
@@ -32,7 +32,7 @@ function AddFarrierItemForm() {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label className={lbl}>COST PER UNIT (AED)</label>
+          <label className={lbl}>COST PER UNIT (₹)</label>
           <input type="number" placeholder="0.00" className={inp} />
         </div>
         <DatePicker label="NEXT SERVICE DUE" />
@@ -42,15 +42,97 @@ function AddFarrierItemForm() {
   );
 }
 
+type FarrierItem = typeof farrierInventoryItems[0];
+
+function EditFarrierItemForm({ item }: { item: FarrierItem }) {
+  return (
+    <div className="space-y-4 mt-2">
+      <div>
+        <label className={lbl}>ITEM NAME</label>
+        <input type="text" defaultValue={item.itemName} className={inp} />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <SelectField label="CATEGORY" options={['Shoes', 'Nails', 'Tools', 'Pads']} defaultValue={item.category} />
+        <div>
+          <label className={lbl}>SUPPLIER</label>
+          <input type="text" defaultValue={item.supplier} className={inp} />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className={lbl}>QUANTITY</label>
+          <input type="number" defaultValue={item.quantity} className={inp} />
+        </div>
+        <SelectField label="CONDITION" options={['Good', 'Fair', 'Poor']} defaultValue={item.condition} />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className={lbl}>COST PER UNIT (₹)</label>
+          <input type="number" defaultValue={item.cost} className={inp} />
+        </div>
+        <DatePicker label="NEXT SERVICE DUE" defaultValue={item.nextServiceDue !== '-' ? item.nextServiceDue : undefined} />
+      </div>
+      <button className="w-full h-10 rounded-lg bg-gradient-to-r from-primary to-primary-dim text-primary-foreground text-sm font-semibold tracking-wider uppercase">Save Changes</button>
+    </div>
+  );
+}
+
+function FilterPanel({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="border-b border-border bg-surface-container-low px-4 sm:px-6 py-4">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Filter Options</span>
+        <button onClick={onClose} className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"><X className="w-3.5 h-3.5" /></button>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <SelectField label="CATEGORY" options={['All', 'Shoes', 'Nails', 'Tools', 'Pads']} defaultValue="All" />
+        <SelectField label="CONDITION" options={['All', 'Good', 'Fair', 'Poor']} defaultValue="All" />
+        <SelectField label="SORT BY" options={['Date Added', 'Name', 'Quantity', 'Cost']} defaultValue="Date Added" />
+        <div className="flex items-end">
+          <button className="w-full h-10 rounded-lg bg-primary text-primary-foreground text-xs font-semibold tracking-wider uppercase">Apply</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RowActions({ item }: { item: FarrierItem }) {
+  const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <button onClick={() => setOpen(o => !o)} className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+        <SlidersHorizontal className="w-4 h-4" />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-7 z-20 w-36 rounded-lg border border-border bg-surface-container-highest shadow-lg py-1 text-sm">
+            <button
+              onClick={() => { setOpen(false); setEditOpen(true); }}
+              className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted transition-colors text-foreground"
+            >
+              <Pencil className="w-3.5 h-3.5 text-primary" /> Edit
+            </button>
+            <button className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted transition-colors text-destructive">
+              <Trash2 className="w-3.5 h-3.5" /> Delete
+            </button>
+          </div>
+        </>
+      )}
+      <FormDialog open={editOpen} onOpenChange={setEditOpen} trigger={<span />} title={`Edit — ${item.itemName}`}>
+        <EditFarrierItemForm item={item} />
+      </FormDialog>
+    </div>
+  );
+}
+
 export default function FarrierInventoryPage() {
   const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
   const perPage = 5;
-  const totalPages = Math.ceil(farrierInventoryItems.length / perPage);
-  const paginated = farrierInventoryItems.slice((currentPage - 1) * perPage, currentPage * perPage);
-
-  const totalItems = farrierInventoryItems.reduce((s, f) => s + f.quantity, 0);
-  const overdueService = farrierInventoryItems.filter(f => f.nextServiceDue !== '-' && new Date(f.nextServiceDue) < new Date()).length;
-  const damagedItems = farrierInventoryItems.filter(f => f.condition === 'Poor').length;
 
   const conditionStyle: Record<string, { color: string; dot: string }> = {
     Good: { color: 'text-success', dot: 'bg-success' },
@@ -64,6 +146,20 @@ export default function FarrierInventoryPage() {
     Tools: 'bg-warning/20 text-warning',
     Pads: 'bg-success/20 text-success',
   };
+
+  const filteredItems = useMemo(() =>
+    farrierInventoryItems.filter(f =>
+      f.itemName.toLowerCase().includes(search.toLowerCase()) ||
+      f.category.toLowerCase().includes(search.toLowerCase()) ||
+      f.supplier.toLowerCase().includes(search.toLowerCase())
+    ), [search]);
+
+  const totalPages = Math.ceil(filteredItems.length / perPage);
+  const paginated = filteredItems.slice((currentPage - 1) * perPage, currentPage * perPage);
+
+  const totalItems = farrierInventoryItems.reduce((s, f) => s + f.quantity, 0);
+  const overdueService = farrierInventoryItems.filter(f => f.nextServiceDue !== '-' && new Date(f.nextServiceDue) < new Date()).length;
+  const damagedItems = farrierInventoryItems.filter(f => f.condition === 'Poor').length;
 
   const kpis = [
     { label: 'TOTAL INVENTORY UNITS', value: totalItems.toLocaleString(), sub: '↗ +12% vs last month', subColor: 'text-success', icon: Package },
@@ -100,62 +196,81 @@ export default function FarrierInventoryPage() {
       </div>
 
       <div className="bg-surface-container-highest rounded-xl edge-glow overflow-hidden">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between px-3 sm:px-6 py-3 sm:py-4 border-b border-border gap-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-high text-sm text-foreground">
-              <SlidersHorizontal className="w-3.5 h-3.5" /> All Categories <span className="text-muted-foreground">▾</span>
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-high text-sm text-foreground">
-              <SlidersHorizontal className="w-3.5 h-3.5" /> Sort by: Date Added <span className="text-muted-foreground">▾</span>
-            </div>
+        {/* Toolbar */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-4 sm:px-6 py-4 border-b border-border">
+          <div className="flex-1 flex items-center gap-2 px-4 h-11 rounded-lg border border-border bg-background">
+            <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+            <input
+              type="text"
+              placeholder="Search by item, category, or supplier..."
+              value={search}
+              onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
+              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none h-full"
+            />
+            {search && (
+              <button onClick={() => { setSearch(''); setCurrentPage(1); }} className="text-muted-foreground hover:text-foreground">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
-          <span className="text-xs text-muted-foreground mono-data uppercase tracking-wider hidden sm:block">Displaying {farrierInventoryItems.length} records</span>
+          <button
+            onClick={() => setShowFilters(f => !f)}
+            className={`h-11 px-4 rounded-lg border flex items-center gap-2 text-sm font-medium transition-colors shrink-0 ${showFilters ? 'bg-primary border-primary text-primary-foreground' : 'border-border text-muted-foreground hover:text-foreground hover:bg-muted'}`}
+          >
+            <SlidersHorizontal className="w-4 h-4" /> Filters
+          </button>
+          <span className="text-xs text-muted-foreground mono-data uppercase tracking-wider hidden sm:block shrink-0">{filteredItems.length} records</span>
         </div>
+
+        {/* Filter Panel */}
+        {showFilters && <FilterPanel onClose={() => setShowFilters(false)} />}
+
         <div className="overflow-x-auto">
-        <table className="w-full min-w-[800px]">
-          <thead>
-            <tr className="border-b border-border">
-              {['ITEM NAME', 'CATEGORY', 'HORSE / SCOPE', 'QTY', 'CONDITION', 'PRIMARY FARRIER', 'SERVICE SCHEDULE', 'COST (AED)'].map(h => (
-                <th key={h} className="px-6 py-3 text-left text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {paginated.map(f => {
-              const cs = conditionStyle[f.condition] || conditionStyle.Good;
-              const isDueSoon = f.nextServiceDue !== '-' && new Date(f.nextServiceDue) <= new Date('2026-05-01');
-              return (
-                <tr key={f.id} className="border-b border-border/50 hover:bg-surface-container-high/50 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-xs font-bold text-primary">{f.itemName.charAt(0)}</div>
-                      <span className="font-semibold text-sm text-foreground">{f.itemName}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${categoryStyle[f.category] || 'bg-muted text-muted-foreground'}`}>{f.category}</span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-foreground">{f.sizeType}</td>
-                  <td className="px-6 py-4 mono-data text-sm font-semibold text-center">{String(f.quantity).padStart(2, '0')}</td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center gap-1.5 text-xs font-semibold uppercase ${cs.color}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${cs.dot}`} />
-                      {f.condition}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-foreground">{f.supplier}</td>
-                  <td className="px-6 py-4">
-                    <div>
-                      <span className="mono-data text-xs text-foreground block">Last: {f.nextServiceDue !== '-' ? f.nextServiceDue : '—'}</span>
-                      {isDueSoon && <span className="text-[10px] text-primary font-bold uppercase mono-data">DUE SOON</span>}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 mono-data text-sm font-semibold text-foreground">AED {f.cost.toLocaleString()}.00</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+          <table className="w-full min-w-[800px]">
+            <thead>
+              <tr className="border-b border-border">
+                {['ITEM NAME', 'CATEGORY', 'HORSE / SCOPE', 'QTY', 'CONDITION', 'PRIMARY FARRIER', 'SERVICE SCHEDULE', 'COST (₹)', ''].map(h => (
+                  <th key={h} className="px-6 py-3 text-left text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {paginated.map(f => {
+                const cs = conditionStyle[f.condition] || conditionStyle.Good;
+                const isDueSoon = f.nextServiceDue !== '-' && new Date(f.nextServiceDue) <= new Date('2026-05-01');
+                return (
+                  <tr key={f.id} className="border-b border-border/50 hover:bg-surface-container-high/50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-xs font-bold text-primary">{f.itemName.charAt(0)}</div>
+                        <span className="font-semibold text-sm text-foreground">{f.itemName}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${categoryStyle[f.category] || 'bg-muted text-muted-foreground'}`}>{f.category}</span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-foreground">{f.sizeType}</td>
+                    <td className="px-6 py-4 mono-data text-sm font-semibold text-center">{String(f.quantity).padStart(2, '0')}</td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center gap-1.5 text-xs font-semibold uppercase ${cs.color}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${cs.dot}`} />
+                        {f.condition}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-foreground">{f.supplier}</td>
+                    <td className="px-6 py-4">
+                      <div>
+                        <span className="mono-data text-xs text-foreground block">Last: {f.nextServiceDue !== '-' ? f.nextServiceDue : '—'}</span>
+                        {isDueSoon && <span className="text-[10px] text-primary font-bold uppercase mono-data">DUE SOON</span>}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 mono-data text-sm font-semibold text-foreground">₹{f.cost.toLocaleString()}.00</td>
+                    <td className="px-6 py-4"><RowActions item={f} /></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
         <div className="flex items-center justify-between px-3 sm:px-6 py-3 border-t border-border">
           <div className="flex gap-2">

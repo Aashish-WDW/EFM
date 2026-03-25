@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   LayoutDashboard, Settings2, CheckSquare, Stethoscope, Cog,
   UtensilsCrossed, DollarSign, Shield, ChevronDown,
-  PanelLeftClose, PanelLeft, ExternalLink, LogOut, BarChart3
+  PanelLeftClose, PanelLeft, ExternalLink, LogOut, BarChart3, LifeBuoy
 } from 'lucide-react';
 import { createContext, useContext } from 'react';
 
@@ -42,8 +42,10 @@ export default function AppSidebar({ collapsed, onToggle, onNavClick }: { collap
   return (
     <aside className={`h-screen flex flex-col bg-surface-container-low horse-pattern shrink-0 transition-[width] duration-300 ease-in-out ${collapsed ? 'w-[68px]' : 'w-[260px]'}`}>
       {/* Logo */}
-      <div className="px-5 pt-5 pb-4 overflow-hidden">
-        {!collapsed && (
+      <div className={`pt-5 pb-4 overflow-hidden ${collapsed ? 'flex justify-center px-3' : 'px-5'}`}>
+        {collapsed ? (
+          <span className="font-display font-bold italic text-primary text-xl tracking-wide">EFM</span>
+        ) : (
           <div>
             <span className="font-display font-bold italic text-primary text-2xl tracking-wide block">EFM</span>
             <span className="text-[10px] tracking-[0.1em] text-muted-foreground uppercase leading-snug">Equine Facility Management</span>
@@ -137,6 +139,19 @@ export default function AppSidebar({ collapsed, onToggle, onNavClick }: { collap
           );
         })}
       </nav>
+
+      {/* Support Link */}
+      <div className="px-3 mb-1">
+        <Link
+          href="/support"
+          onClick={onNavClick}
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative ${collapsed ? 'justify-center' : ''} ${pathname === '/support' ? 'bg-surface-container-highest text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-surface-container-high'}`}
+        >
+          {pathname === '/support' && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-primary rounded-r-full" />}
+          <LifeBuoy className="w-4 h-4 shrink-0" />
+          {!collapsed && <span>Support</span>}
+        </Link>
+      </div>
 
       {/* Logout Button */}
       <div className="px-3 mb-2">

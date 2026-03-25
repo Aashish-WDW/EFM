@@ -1,8 +1,9 @@
 'use client';
 import { useState } from 'react';
-import { DollarSign, TrendingUp, Clock, ArrowDown, Filter, Upload, Plus, CheckCircle, FileText } from 'lucide-react';
-import { expenses } from '@/data/seed';
+import { DollarSign, TrendingUp, Clock, ArrowDown, Filter, Upload, Plus, CheckCircle, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
+import { expenses as initialExpenses } from '@/data/seed';
 import SelectField from '@/components/shared/SelectField';
+import { toast } from 'sonner';
 
 const categoryColors: Record<string, string> = {
   'Feed Purchase': 'bg-success/20 text-success',
@@ -23,8 +24,54 @@ const categoryLabels: Record<string, string> = {
 export default function ExpensesPage() {
   const [page, setPage] = useState(1);
   const [viewMode, setViewMode] = useState<'Facility' | 'Asset'>('Facility');
+  const [expenses, setExpenses] = useState(initialExpenses);
+  const [classification, setClassification] = useState<'OPERATIONAL' | 'INTERNAL'>('OPERATIONAL');
+  const [formData, setFormData] = useState({
+    description: '',
+    amount: '',
+    asset: 'Facility Wide'
+  });
+
   const total = expenses.reduce((s, e) => s + e.amount, 0);
   const topCategory = 'EQUINE NUTRITION';
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleLogExpense = () => {
+    if (!formData.description || !formData.amount) {
+      toast.error("Please fill in all required fields.");
+      return;
+    }
+
+    const newExpense = {
+      id: `exp-${Date.now()}`,
+      date: new Date().toISOString().split('T')[0],
+      expenseType: 'Maintenance', // Default for now
+      description: formData.description,
+      amount: parseFloat(formData.amount),
+      horseName: formData.asset,
+      employeeName: 'Admin User'
+    };
+
+    setExpenses(prev => [newExpense, ...prev]);
+    setFormData({ description: '', amount: '', asset: 'Facility Wide' });
+    toast.success("Expense logged and validated successfully!");
+  };
+
+  const handleExport = () => {
+    toast.info("Exporting financial intelligence report...");
+  };
+
+  const handleNewExpenseClick = () => {
+    const section = document.getElementById('post-new-entry');
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth' });
+      toast.info("Scroll to 'Post New Entry' form.");
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -42,7 +89,10 @@ export default function ExpensesPage() {
               </button>
             ))}
           </div>
-          <button className="h-9 px-4 rounded-lg bg-gradient-to-r from-primary to-primary-dim text-primary-foreground text-sm font-medium flex items-center gap-2">
+          <button 
+            onClick={handleNewExpenseClick}
+            className="h-9 px-4 rounded-lg bg-gradient-to-r from-primary to-primary-dim text-primary-foreground text-sm font-medium flex items-center gap-2"
+          >
             <Plus className="w-4 h-4" /> New Expense
           </button>
         </div>
@@ -83,7 +133,10 @@ export default function ExpensesPage() {
         <SelectField options={['All Expense Categories', 'Feed Purchase', 'Veterinary', 'Farrier', 'Equipment', 'Maintenance']} defaultValue="All Expense Categories" size="sm" className="w-48" />
         <SelectField options={['All Equine Assets', 'Shadowfax', 'Midnight Star', 'Thunder Bay', 'Facility Wide']} defaultValue="All Equine Assets" size="sm" className="w-44" />
         <SelectField options={['All Handlers', 'Michael Groom', 'Sam Vet', 'Mike Farrier', 'Daniel Maintenance']} defaultValue="All Handlers" size="sm" className="w-40" />
-        <button className="h-8 px-3 rounded-lg border border-border text-muted-foreground text-xs flex items-center gap-1.5 hover:bg-surface-container-high">
+        <button 
+          onClick={handleExport}
+          className="h-8 px-3 rounded-lg border border-border text-muted-foreground text-xs flex items-center gap-1.5 hover:bg-surface-container-high"
+        >
           <Upload className="w-3 h-3" /> EXPORT
         </button>
       </div>
@@ -106,8 +159,8 @@ export default function ExpensesPage() {
               </thead>
               <tbody>
                 {expenses.map(e => (
-                  <tr key={e.id} className="border-b border-border/30 hover:bg-surface-container-high/50 transition-colors">
-                    <td className="px-5 py-4 mono-data text-xs text-muted-foreground">{e.date}</td>
+                   <tr key={e.id} className="border-b border-border/30 hover:bg-surface-container-high/50 transition-colors">
+                    <td className="px-5 py-4 mono-data text-xs text-muted-foreground whitespace-nowrap">{e.date}</td>
                     <td className="px-3 py-4">
                       <span className={`px-2 py-1 rounded text-[10px] font-bold tracking-wider ${categoryColors[e.expenseType] || 'bg-primary/20 text-primary'}`}>
                         {categoryLabels[e.expenseType] || e.expenseType.toUpperCase()}
@@ -118,27 +171,27 @@ export default function ExpensesPage() {
                     <td className="px-3 py-4">
                       <div className="flex items-center gap-2">
                         {e.horseName !== 'N/A' && e.horseName !== 'General' && e.horseName !== 'Multiple' && (
-                          <span className="w-6 h-6 rounded-full bg-primary/20 text-primary text-[10px] font-bold flex items-center justify-center">
+                          <span className="w-6 h-6 rounded-full bg-primary/20 text-primary text-[10px] font-bold flex items-center justify-center shrink-0">
                             {e.horseName.charAt(0)}{e.horseName.charAt(1)}
                           </span>
                         )}
-                        <span className="text-sm text-muted-foreground">{e.horseName}</span>
+                        <span className="text-sm text-muted-foreground truncate max-w-[100px]">{e.horseName}</span>
                       </div>
                     </td>
-                    <td className="px-3 py-4 text-sm text-muted-foreground">{e.employeeName}</td>
+                    <td className="px-3 py-4 text-sm text-muted-foreground truncate max-w-[100px]">{e.employeeName}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
             </div>
             <div className="flex items-center justify-between px-3 sm:px-5 py-3 border-t border-border">
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wider hidden sm:block">Displaying {expenses.length} of 128 entries</span>
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider hidden sm:block">Displaying {expenses.length} of {expenses.length + 100} entries</span>
               <div className="flex gap-1">
-                <button className="px-3 py-1.5 rounded text-xs text-muted-foreground hover:bg-surface-container-high">&lt;</button>
+                <button className="px-3 py-1.5 rounded text-xs text-muted-foreground hover:bg-surface-container-high"><ChevronLeft className="w-3 h-3" /></button>
                 <button className="px-3 py-1.5 rounded text-xs font-medium bg-primary text-primary-foreground">1</button>
                 <button className="px-3 py-1.5 rounded text-xs text-muted-foreground hover:bg-surface-container-high">2</button>
                 <button className="px-3 py-1.5 rounded text-xs text-muted-foreground hover:bg-surface-container-high">3</button>
-                <button className="px-3 py-1.5 rounded text-xs text-muted-foreground hover:bg-surface-container-high">&gt;</button>
+                <button className="px-3 py-1.5 rounded text-xs text-muted-foreground hover:bg-surface-container-high"><ChevronRight className="w-3 h-3" /></button>
               </div>
             </div>
           </div>
@@ -147,7 +200,7 @@ export default function ExpensesPage() {
         {/* Right Panel */}
         <div className="lg:col-span-5 space-y-4">
           {/* Post New Entry Form */}
-          <div className="bg-surface-container-highest rounded-lg p-5 edge-glow">
+          <div id="post-new-entry" className="bg-surface-container-highest rounded-lg p-5 edge-glow">
             <div className="flex items-center gap-2 mb-5">
               <Plus className="w-5 h-5 text-primary" />
               <h2 className="heading-md text-foreground uppercase tracking-wider">Post New Entry</h2>
@@ -156,33 +209,67 @@ export default function ExpensesPage() {
               <div>
                 <label className="label-sm text-muted-foreground block mb-2">CLASSIFICATION</label>
                 <div className="flex rounded-lg overflow-hidden border border-border">
-                  <button className="flex-1 h-9 text-sm font-medium bg-primary text-primary-foreground">OPERATIONAL</button>
-                  <button className="flex-1 h-9 text-sm font-medium text-muted-foreground hover:text-foreground bg-surface-container-high">INTERNAL</button>
+                  <button 
+                    onClick={() => setClassification('OPERATIONAL')}
+                    className={`flex-1 h-9 text-sm font-medium transition-colors ${classification === 'OPERATIONAL' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground bg-surface-container-high'}`}
+                  >
+                    OPERATIONAL
+                  </button>
+                  <button 
+                    onClick={() => setClassification('INTERNAL')}
+                    className={`flex-1 h-9 text-sm font-medium transition-colors ${classification === 'INTERNAL' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground bg-surface-container-high'}`}
+                  >
+                    INTERNAL
+                  </button>
                 </div>
               </div>
               <div>
                 <label className="label-sm text-primary block mb-1.5">ENTRY DESCRIPTION</label>
-                <input type="text" placeholder="e.g. Quarter 4 Stable Ventilation..." className="w-full h-10 px-3 rounded-lg bg-surface-container-high border border-border text-foreground text-sm placeholder:text-muted-foreground/50 focus:ring-1 focus:ring-primary outline-none" />
+                <input 
+                  type="text" 
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  placeholder="e.g. Quarter 4 Stable Ventilation..." 
+                  className="w-full h-10 px-3 rounded-lg bg-surface-container-high border border-border text-foreground text-sm placeholder:text-muted-foreground/50 focus:ring-1 focus:ring-primary outline-none" 
+                />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="label-sm text-primary block mb-1.5">AMOUNT (₹)</label>
-                  <input type="number" placeholder="0.00" className="w-full h-10 px-3 rounded-lg bg-surface-container-high border border-border text-foreground text-sm mono-data focus:ring-1 focus:ring-primary outline-none" />
+                  <input 
+                    type="number" 
+                    name="amount"
+                    value={formData.amount}
+                    onChange={handleInputChange}
+                    placeholder="0.00" 
+                    className="w-full h-10 px-3 rounded-lg bg-surface-container-high border border-border text-foreground text-sm mono-data focus:ring-1 focus:ring-primary outline-none" 
+                  />
                 </div>
                 <div>
                   <label className="label-sm text-primary block mb-1.5">ASSET ATTRIBUTION</label>
-                  <SelectField options={['Shadowfax', 'Midnight Star', 'Thunder Bay', 'Facility Wide']} defaultValue="Facility Wide" />
+                  <SelectField 
+                    options={['Shadowfax', 'Midnight Star', 'Thunder Bay', 'Facility Wide']} 
+                    value={formData.asset}
+                    onChange={(val) => setFormData(prev => ({ ...prev, asset: val }))}
+                  />
                 </div>
               </div>
               <div>
                 <label className="label-sm text-muted-foreground block mb-1.5">PROOF OF PURCHASE (OCR ENABLED)</label>
-                <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors cursor-pointer">
+                <div 
+                  onClick={() => toast.info("Opening file browser...")}
+                  className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors cursor-pointer"
+                >
                   <Upload className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">Drop invoice or <span className="text-primary font-medium">browse files</span></p>
                   <p className="text-[10px] text-muted-foreground mt-1">SECURE PDF, PNG OR JPG (MAX 10MB)</p>
                 </div>
               </div>
-              <button className="w-full h-10 rounded-lg bg-gradient-to-r from-primary to-primary-dim text-primary-foreground text-sm font-semibold tracking-wider uppercase">
+              <button 
+                onClick={handleLogExpense}
+                className="w-full h-10 rounded-lg bg-gradient-to-r from-primary to-primary-dim text-primary-foreground text-sm font-semibold tracking-wider uppercase hover:opacity-90 transition-opacity"
+              >
                 VALIDATE & LOG EXPENSE
               </button>
             </div>

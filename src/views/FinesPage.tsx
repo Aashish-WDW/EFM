@@ -1,10 +1,18 @@
 'use client';
 import { useState } from 'react';
-import { DollarSign, AlertTriangle, Plus, Upload, MoreVertical, Zap } from 'lucide-react';
-import { fines } from '@/data/seed';
+import { DollarSign, AlertTriangle, Plus, Upload, MoreVertical, Zap, CheckCircle2, XCircle, Undo2, Trash2 } from 'lucide-react';
+import { fines as initialFines, Fine } from '@/data/seed';
 import SelectField from '@/components/shared/SelectField';
 import DatePicker from '@/components/shared/DatePicker';
 import { toast } from 'sonner';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const statusStyles: Record<string, string> = {
   Issued: 'bg-warning/20 text-warning border border-warning/30',
@@ -26,17 +34,53 @@ const deptMap: Record<string, string> = {
   'Daniel Maintenance': 'MAINTENANCE',
 };
 
-const [tab, filterFines] = ['All', (t: string, data: typeof fines) => t === 'All' ? data : data.filter(f => (statusLabels[f.status] || f.status) === t.toUpperCase())] as const;
-
 export default function FinesPage() {
   const [activeTab, setActiveTab] = useState('All');
+  const [fines, setFines] = useState(initialFines);
+  const [formData, setFormData] = useState({
+    employee: '',
+    reason: '',
+    amount: ''
+  });
+
   const totalVolume = fines.reduce((s, f) => s + f.amount, 0);
   const pendingCount = fines.filter(f => f.status === 'Issued').length;
+  
   const filtered = activeTab === 'All' ? fines : fines.filter(f => {
     if (activeTab === 'Pending') return f.status === 'Issued';
     if (activeTab === 'Resolved') return f.status === 'Paid' || f.status === 'Waived';
     return true;
   });
+
+  const handleExecuteAction = () => {
+    if (!formData.employee || !formData.reason || !formData.amount) {
+      toast.error("Please fill in all required fields.");
+      return;
+    }
+
+    const newFine = {
+      id: `fine-${Date.now()}`,
+      issuedAt: new Date().toISOString().split('T')[0],
+      employeeName: formData.employee,
+      reason: formData.reason,
+      amount: parseFloat(formData.amount),
+      status: 'Issued'
+    } as any;
+
+    setFines(prev => [newFine, ...prev]);
+    setFormData({ employee: '', reason: '', amount: '' });
+    toast.success('Fine enforcement action executed successfully');
+  };
+
+  const handleUpdateStatus = (id: string, newStatus: Fine['status']) => {
+    setFines(prev => prev.map(f => f.id === id ? { ...f, status: newStatus } : f));
+    toast.success(`Fine status updated to ${newStatus}`);
+  };
+
+  const handleDeleteFine = (id: string) => {
+    setFines(prev => prev.filter(f => f.id !== id));
+    toast.success("Fine record deleted successfully");
+  };
 
   return (
     <div className="space-y-6">
@@ -75,25 +119,46 @@ export default function FinesPage() {
               <h2 className="heading-md text-foreground">Issue Enforcement</h2>
             </div>
             <div className="space-y-4">
-              <SelectField label="EMPLOYEE IDENTIFICATION" options={['Mike Farrier', 'Fahad Groom', 'Daniel Maintenance']} placeholder="Select Personnel..." />
-              <SelectField label="INFRACTION CATEGORY" options={['Late Arrival', 'Negligence', 'Unauthorized Use', 'Safety Violation']} placeholder="Select Reason..." />
+              <SelectField 
+                label="EMPLOYEE IDENTIFICATION" 
+                options={['Mike Farrier', 'Fahad Groom', 'Daniel Maintenance']} 
+                placeholder="Select Personnel..." 
+                value={formData.employee}
+                onChange={(val) => setFormData(prev => ({ ...prev, employee: val }))}
+              />
+              <SelectField 
+                label="INFRACTION CATEGORY" 
+                options={['Late Arrival', 'Negligence', 'Unauthorized Use', 'Safety Violation']} 
+                placeholder="Select Reason..." 
+                value={formData.reason}
+                onChange={(val) => setFormData(prev => ({ ...prev, reason: val }))}
+              />
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="label-sm text-muted-foreground block mb-1.5">FINE AMOUNT</label>
-                  <input type="number" placeholder="₹0.00" className="w-full h-10 px-3 rounded-lg bg-surface-container-high border border-border text-foreground text-sm mono-data placeholder:text-muted-foreground/50 focus:ring-1 focus:ring-primary outline-none" />
+                  <input 
+                    type="number" 
+                    value={formData.amount}
+                    onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                    placeholder="₹0.00" 
+                    className="w-full h-10 px-3 rounded-lg bg-surface-container-high border border-border text-foreground text-sm mono-data placeholder:text-muted-foreground/50 focus:ring-1 focus:ring-primary outline-none" 
+                  />
                 </div>
                 <DatePicker label="INCIDENT DATE" />
               </div>
               <div>
                 <label className="label-sm text-muted-foreground block mb-1.5">EVIDENCE DOCUMENTATION</label>
-                <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors cursor-pointer">
+                <div 
+                  onClick={() => toast.info("Attaching evidence documents...")}
+                  className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors cursor-pointer"
+                >
                   <Upload className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
                   <p className="text-xs text-muted-foreground">Drop PDF or Images here to attach</p>
                 </div>
               </div>
               <button 
-                onClick={() => toast.success('Fine enforcement action executed successfully')}
-                className="w-full h-10 rounded-lg bg-gradient-to-r from-primary to-primary-dim text-primary-foreground text-sm font-semibold tracking-wider flex items-center justify-center gap-2 transition-opacity active:opacity-80"
+                onClick={handleExecuteAction}
+                className="w-full h-10 rounded-lg bg-gradient-to-r from-primary to-primary-dim text-primary-foreground text-sm font-semibold tracking-wider flex items-center justify-center gap-2 transition-opacity active:opacity-80 hover:opacity-90"
               >
                 Execute Fine Action <Zap className="w-4 h-4" />
               </button>
@@ -158,12 +223,32 @@ export default function FinesPage() {
                       </span>
                     </td>
                     <td className="px-3 py-4">
-                      <button 
-                        onClick={() => toast.info(`Action menu for fine #${f.id}`)}
-                        className="text-muted-foreground hover:text-foreground p-1 rounded hover:bg-surface-container-high transition-colors"
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button 
+                            className="text-muted-foreground hover:text-foreground p-1 rounded hover:bg-surface-container-high transition-colors"
+                          >
+                            <MoreVertical className="w-4 h-4" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="bg-surface-container-highest border-border">
+                          <DropdownMenuLabel className="text-muted-foreground">Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator className="bg-border" />
+                          <DropdownMenuItem onClick={() => handleUpdateStatus(f.id, 'Paid')} className="text-foreground hover:bg-surface-container-high cursor-pointer gap-2">
+                            <CheckCircle2 className="w-4 h-4 text-success" /> Mark as Paid
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleUpdateStatus(f.id, 'Waived')} className="text-foreground hover:bg-surface-container-high cursor-pointer gap-2">
+                            <Undo2 className="w-4 h-4 text-primary" /> Waive Fine
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleUpdateStatus(f.id, 'Appealed')} className="text-foreground hover:bg-surface-container-high cursor-pointer gap-2">
+                            <AlertTriangle className="w-4 h-4 text-warning" /> Mark as Appealed
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator className="bg-border" />
+                          <DropdownMenuItem onClick={() => handleDeleteFine(f.id)} className="text-destructive hover:bg-destructive/10 cursor-pointer gap-2">
+                            <Trash2 className="w-4 h-4" /> Delete Record
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </td>
                   </tr>
                 ))}
@@ -171,7 +256,7 @@ export default function FinesPage() {
             </table>
             </div>
             <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-t border-border">
-              <span className="text-xs text-muted-foreground hidden sm:block">Showing {filtered.length} of 128 enforcement actions</span>
+              <span className="text-xs text-muted-foreground hidden sm:block">Showing {filtered.length} of {fines.length + 10} enforcement actions</span>
               <div className="flex gap-4">
                 <button className="text-xs text-muted-foreground hover:text-foreground font-medium tracking-wider">PREVIOUS</button>
                 <button className="text-xs text-muted-foreground hover:text-foreground font-medium tracking-wider">NEXT</button>

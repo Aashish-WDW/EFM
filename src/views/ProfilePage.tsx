@@ -1,7 +1,46 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Sun, Moon, Type, Globe } from 'lucide-react';
+import { Sun, Moon, Type, Globe, Edit, Lock as LockIcon, Download, Save, X } from 'lucide-react';
 import RandomLetterReveal from '@/components/shared/RandomLetterReveal';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger,
+  DialogFooter
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+
+const profileSchema = z.object({
+  fullName: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().min(10, "Phone number must be at least 10 digits"),
+  department: z.string().min(2, "Department is required"),
+});
+
+const passwordSchema = z.object({
+  oldPassword: z.string().min(6, "Password must be at least 6 characters"),
+  newPassword: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string().min(6, "Password must be at least 6 characters"),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
 
 export default function ProfilePage() {
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -12,10 +51,54 @@ export default function ProfilePage() {
   });
 
   const [textSize, setTextSize] = useState<'small' | 'medium' | 'chunky'>(() => {
-    return (localStorage.getItem('efm-text-size') as 'small' | 'medium' | 'chunky') || 'medium';
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('efm-text-size') as 'small' | 'medium' | 'chunky') || 'medium';
+    }
+    return 'medium';
   });
 
   const [language, setLanguage] = useState<'en' | 'hi' | 'te' | 'kn'>('en');
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isPasswordOpen, setIsPasswordOpen] = useState(false);
+  
+  // User Data State
+  const [userData, setUserData] = useState({
+    fullName: 'Admin User',
+    email: 'admin@test.com',
+    phone: '555-0001',
+    role: 'Super Admin',
+    department: 'Admin',
+    status: 'Active'
+  });
+
+  // PWA Install Prompt State
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) {
+      toast.info("Installation prompt is not available. Your browser might not support it or the app is already installed.");
+      return;
+    }
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+      toast.success("App installed successfully!");
+    }
+  };
 
   useEffect(() => {
     if (theme === 'light') {
@@ -45,6 +128,37 @@ export default function ProfilePage() {
     localStorage.setItem('efm-text-size', textSize);
   }, [textSize]);
 
+  const profileForm = useForm<z.infer<typeof profileSchema>>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      fullName: userData.fullName,
+      email: userData.email,
+      phone: userData.phone,
+      department: userData.department,
+    },
+  });
+
+  const passwordForm = useForm<z.infer<typeof passwordSchema>>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: {
+      oldPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    },
+  });
+
+  function onProfileSubmit(values: z.infer<typeof profileSchema>) {
+    setUserData(prev => ({ ...prev, ...values }));
+    setIsEditOpen(false);
+    toast.success("Profile updated successfully!");
+  }
+
+  function onPasswordSubmit(values: z.infer<typeof passwordSchema>) {
+    setIsPasswordOpen(false);
+    passwordForm.reset();
+    toast.success("Password changed successfully!");
+  }
+
   return (
     <div className="space-y-6 text-foreground">
       <h1 className="display-sm">
@@ -56,25 +170,187 @@ export default function ProfilePage() {
         <div className="bg-surface-container-highest rounded-xl p-6 edge-glow">
           <div className="flex items-center gap-4 mb-6">
             <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
-              <span className="font-display text-xl font-bold text-primary">AU</span>
+              <span className="font-display text-xl font-bold text-primary">
+                {userData.fullName.split(' ').map(n => n[0]).join('')}
+              </span>
             </div>
             <div>
-              <h2 className="heading-lg text-foreground">Admin User</h2>
-              <p className="text-sm text-muted-foreground">Super Admin</p>
-              <p className="text-xs text-muted-foreground mono-data uppercase tracking-wider mt-1 opacity-60">admin@test.com</p>
+              <h2 className="heading-lg text-foreground">{userData.fullName}</h2>
+              <p className="text-sm text-muted-foreground">{userData.role}</p>
+              <p className="text-xs text-muted-foreground mono-data uppercase tracking-wider mt-1 opacity-60">{userData.email}</p>
             </div>
           </div>
           <div className="space-y-3">
-            {[['Full Name', 'Admin User'], ['Email', 'admin@test.com'], ['Phone', '555-0001'], ['Role', 'Super Admin'], ['Department', 'Admin'], ['Status', 'Active']].map(([label, value]) => (
+            {[
+              ['Full Name', userData.fullName], 
+              ['Email', userData.email], 
+              ['Phone', userData.phone], 
+              ['Role', userData.role], 
+              ['Department', userData.department], 
+              ['Status', userData.status]
+            ].map(([label, value]) => (
               <div key={label} className="flex justify-between py-2 border-b border-white/5 last:border-0">
                 <span className="text-sm text-muted-foreground">{label}</span>
                 <span className="text-sm text-foreground font-medium">{value}</span>
               </div>
             ))}
           </div>
-          <div className="mt-6 flex gap-2">
-            <button className="h-9 px-4 rounded-lg bg-gradient-to-r from-primary to-primary-dim text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity">Edit Profile</button>
-            <button className="h-9 px-4 rounded-lg bg-surface-container-high text-muted-foreground text-sm hover:text-foreground transition-all">Change Password</button>
+          <div className="mt-6 flex flex-wrap gap-2">
+            {/* Edit Profile Dialog */}
+            <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+              <DialogTrigger asChild>
+                <button className="h-9 px-4 rounded-lg bg-gradient-to-r from-primary to-primary-dim text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
+                  <Edit className="w-4 h-4" /> Edit Profile
+                </button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px] bg-surface-container-highest border-border">
+                <DialogHeader>
+                  <DialogTitle className="text-foreground">Edit Profile</DialogTitle>
+                </DialogHeader>
+                <Form {...profileForm}>
+                  <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4 py-4">
+                    <FormField
+                      control={profileForm.control}
+                      name="fullName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-muted-foreground">Full Name</FormLabel>
+                          <FormControl>
+                            <Input {...field} className="bg-surface-container-high border-border text-foreground" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={profileForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-muted-foreground">Email</FormLabel>
+                          <FormControl>
+                            <Input {...field} className="bg-surface-container-high border-border text-foreground" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={profileForm.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-muted-foreground">Phone</FormLabel>
+                          <FormControl>
+                            <Input {...field} className="bg-surface-container-high border-border text-foreground" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={profileForm.control}
+                      name="department"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-muted-foreground">Department</FormLabel>
+                          <FormControl>
+                            <Input {...field} className="bg-surface-container-high border-border text-foreground" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <DialogFooter>
+                      <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                        <Save className="w-4 h-4 mr-2" /> Save Changes
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
+
+            {/* Change Password Dialog */}
+            <Dialog open={isPasswordOpen} onOpenChange={setIsPasswordOpen}>
+              <DialogTrigger asChild>
+                <button className="h-9 px-4 rounded-lg bg-surface-container-high text-muted-foreground text-sm hover:text-foreground transition-all flex items-center gap-2 border border-border">
+                  <LockIcon className="w-4 h-4" /> Change Password
+                </button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px] bg-surface-container-highest border-border">
+                <DialogHeader>
+                  <DialogTitle className="text-foreground">Change Password</DialogTitle>
+                </DialogHeader>
+                <Form {...passwordForm}>
+                  <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4 py-4">
+                    <FormField
+                      control={passwordForm.control}
+                      name="oldPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-muted-foreground">Current Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} className="bg-surface-container-high border-border text-foreground" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={passwordForm.control}
+                      name="newPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-muted-foreground">New Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} className="bg-surface-container-high border-border text-foreground" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={passwordForm.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-muted-foreground">Confirm New Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} className="bg-surface-container-high border-border text-foreground" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="flex justify-end">
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          setIsPasswordOpen(false);
+                          toast.info("Password reset instructions sent to your email.");
+                        }}
+                        className="text-xs text-primary hover:underline"
+                      >
+                        Forgot Password?
+                      </button>
+                    </div>
+                    <DialogFooter>
+                      <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                        <LockIcon className="w-4 h-4 mr-2" /> Update Password
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
+
+            <button 
+              onClick={handleInstallClick}
+              className="h-9 px-4 rounded-lg bg-success/15 text-success text-sm hover:bg-success/25 transition-all flex items-center gap-2 border border-success/20"
+            >
+              <Download className="w-4 h-4" /> Install App
+            </button>
           </div>
         </div>
 

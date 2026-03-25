@@ -16,8 +16,9 @@ import {
 import '@xyflow/react/dist/style.css';
 import { teamMembers } from '@/data/seed';
 import RandomLetterReveal from '@/components/shared/RandomLetterReveal';
-import { Maximize, Minimize, Plus } from 'lucide-react';
+import { Maximize, Minimize, Plus, RotateCcw, Info } from 'lucide-react';
 import FormDialog from '@/components/shared/FormDialog';
+import { useReactFlow, ReactFlowProvider } from '@xyflow/react';
 
 // All roles with their display info
 const roleConfig: Record<string, { color: string; bg: string; department: string }> = {
@@ -171,9 +172,18 @@ function generateLayout(): { nodes: Node[]; edges: Edge[] } {
 }
 
 export default function EntityMapPage() {
+  return (
+    <ReactFlowProvider>
+      <EntityMapContent />
+    </ReactFlowProvider>
+  );
+}
+
+function EntityMapContent() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { fitView } = useReactFlow();
 
   const layout = useMemo(() => generateLayout(), []);
   const [nodes, setNodes, onNodesChange] = useNodesState(layout.nodes);
@@ -187,6 +197,10 @@ export default function EntityMapPage() {
       document.exitFullscreen();
       setIsFullscreen(false);
     }
+  };
+
+  const handleReset = () => {
+    fitView({ duration: 800, padding: 0.15 });
   };
 
   const handleAddNode = (e: React.FormEvent<HTMLFormElement>) => {
@@ -218,6 +232,9 @@ export default function EntityMapPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between">
         <div>
+          <p className="label-sm text-muted-foreground text-[10px] truncate uppercase tracking-widest mb-1">
+            Organization &gt; Visualizers &gt; <span className="text-primary">Entity Topology</span>
+          </p>
           <div className="flex items-center gap-2 mb-1">
             <div className="w-6 h-0.5 bg-primary rounded" /><div className="w-3 h-0.5 bg-primary rounded" />
             <span className="text-xs font-bold uppercase tracking-widest text-primary">Organizational Topology</span>
@@ -230,9 +247,10 @@ export default function EntityMapPage() {
           </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          <div className="hidden sm:flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-primary" /> {nodes.length} Roles</span>
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-success" /> {teamMembers.length}+ People</span>
+          <div className="hidden lg:flex items-center gap-4 text-[10px] font-bold tracking-widest text-muted-foreground uppercase border-r border-border pr-4 mr-1">
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-primary" /> {nodes.length} NODES</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-secondary" /> 42 NOTES</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-success" /> 165 EDGES</span>
           </div>
           <FormDialog
             open={isDialogOpen}
@@ -250,6 +268,9 @@ export default function EntityMapPage() {
               <button type="submit" className="w-full h-10 rounded-lg bg-gradient-to-r from-primary to-primary-dim text-primary-foreground text-sm font-semibold tracking-wider uppercase">ADD NODE</button>
             </form>
           </FormDialog>
+          <button onClick={handleReset} className="h-9 px-3 rounded-lg border border-border text-foreground hover:bg-surface-container-high transition-colors flex items-center gap-2 text-sm uppercase font-bold tracking-wider" title="Reset Viewport">
+            <RotateCcw className="w-3.5 h-3.5" /> <span className="hidden sm:inline">RESET</span>
+          </button>
           <button onClick={toggleFullscreen} className="w-9 h-9 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-surface-container-high transition-colors" title="Toggle Fullscreen">
             {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
           </button>
@@ -281,6 +302,28 @@ export default function EntityMapPage() {
           />
           <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="hsl(240 5% 15%)" />
         </ReactFlow>
+
+        {/* Legend Overlay */}
+        <div className="absolute top-4 left-4 z-10 bg-surface-container-highest/90 backdrop-blur-md border border-border p-4 rounded-xl shadow-2xl space-y-3 max-w-[200px]">
+          <div className="flex items-center gap-2 mb-1">
+            <Info className="w-3.5 h-3.5 text-primary" />
+            <h4 className="text-[10px] font-bold text-foreground uppercase tracking-[0.2em]">Categories</h4>
+          </div>
+          <div className="space-y-2">
+            {[
+              { label: 'Stable Ops', color: '#22c55e' },
+              { label: 'Security', color: '#8b5cf6' },
+              { label: 'Maintenance', color: '#f59e0b' },
+              { label: 'Ground Ops', color: '#84cc16' },
+              { label: 'Accounts', color: '#60a5fa' },
+            ].map(cat => (
+              <div key={cat.label} className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }} />
+                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{cat.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

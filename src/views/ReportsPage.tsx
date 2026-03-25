@@ -1,5 +1,5 @@
 'use client';
-import { BarChart3, DollarSign, Users, Heart, ArrowUpRight, Download, TrendingUp, MoreHorizontal, FileText, Search } from 'lucide-react';
+import { BarChart3, DollarSign, Users, Heart, ArrowUpRight, Download, TrendingUp, MoreHorizontal, FileText, Search, Calendar } from 'lucide-react';
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Bar, BarChart } from 'recharts';
 
 const trendData = [
@@ -21,10 +21,10 @@ const barData = [
 ];
 
 const reportCategories = [
-  { icon: BarChart3, label: 'OPERATIONS', desc: 'Stable occupancy, task completion rates, and logistical efficiency.', color: 'bg-primary/15 text-primary' },
-  { icon: DollarSign, label: 'FINANCIALS', desc: 'Revenue streams, expense breakdown, and ROI projections.', color: 'bg-destructive/15 text-destructive' },
-  { icon: Users, label: 'STAFF PERFORMANCE', desc: 'Shift compliance, performance metrics, and safety audits.', color: 'bg-secondary/15 text-secondary' },
-  { icon: Heart, label: 'HORSE HEALTH', desc: 'Vetting history, nutrition tracking, and health risk scoring.', color: 'bg-success/15 text-success' },
+  { icon: Users, label: 'ATTENDANCE', desc: 'Shift clock-ins, biometric logs, and crew availability matrix.', color: 'bg-primary/10 text-primary' },
+  { icon: FileText, label: 'TASK REPORTS', desc: 'Completion rates, milestone tracking, and operational bottlenecks.', color: 'bg-secondary/10 text-secondary' },
+  { icon: DollarSign, label: 'EXPENSE REPORTS', desc: 'Stable procurement, maintenance costs, and payroll distribution.', color: 'bg-destructive/10 text-destructive' },
+  { icon: Heart, label: 'HORSE HEALTH', desc: 'Vetting history, nutrition tracking, and health risk scoring.', color: 'bg-success/10 text-success' },
 ];
 
 const recentExports = [
@@ -37,18 +37,26 @@ export default function ReportsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div>
-          <p className="label-sm text-primary tracking-widest">SYSTEM ARCHITECTURE ── REPORTS MODULE</p>
+          <p className="label-sm text-muted-foreground text-[10px] truncate uppercase tracking-widest">
+            Organization &gt; Analytics &gt; <span className="text-primary">Reports Module</span>
+          </p>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mt-1">ANALYTICAL REPORTS</h1>
+          <p className="text-sm text-muted-foreground mt-1 max-w-lg">System-wide performance matrices and multi-vector data exports.</p>
         </div>
-        <div className="flex gap-2 shrink-0">
-          <button className="h-9 px-3 sm:px-4 rounded-lg border border-border text-foreground text-sm font-medium flex items-center gap-2 hover:bg-surface-container-high transition-colors">
-            <Download className="w-4 h-4" /> <span className="hidden sm:inline">EXPORT CSV</span>
+        <div className="flex items-center gap-2 shrink-0">
+          <button className="h-9 px-3 sm:px-4 rounded-lg border border-border text-foreground text-sm font-medium flex items-center gap-2 hover:bg-surface-container-high transition-colors bg-surface-container-high/40">
+            <Calendar className="w-4 h-4 text-primary" /> <span className="hidden sm:inline">DATE RANGE</span>
           </button>
-          <button className="h-9 px-3 sm:px-4 rounded-lg border border-border text-foreground text-sm font-medium flex items-center gap-2 hover:bg-surface-container-high transition-colors">
-            <Download className="w-4 h-4" /> <span className="hidden sm:inline">EXPORT EXCEL</span>
-          </button>
+          <div className="flex border border-border rounded-lg overflow-hidden h-9">
+            <button className="px-3 sm:px-4 text-foreground text-xs font-bold hover:bg-surface-container-high transition-colors flex items-center gap-2 border-r border-border uppercase tracking-wider">
+              <Download className="w-3.5 h-3.5" /> CSV
+            </button>
+            <button className="px-3 sm:px-4 text-foreground text-xs font-bold hover:bg-surface-container-high transition-colors flex items-center gap-2 uppercase tracking-wider">
+              EXCEL
+            </button>
+          </div>
         </div>
       </div>
 
@@ -60,7 +68,16 @@ export default function ReportsPage() {
               <div className={`w-9 h-9 rounded-lg ${cat.color} flex items-center justify-center`}>
                 <cat.icon className="w-4 h-4" />
               </div>
-              <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+              <div className="flex gap-2">
+                <button 
+                  onClick={(e) => { e.stopPropagation(); alert(`Downloading ${cat.label} report...`); }}
+                  className="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-muted-foreground hover:text-primary transition-colors border border-border/50"
+                  title="Download Report"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                </button>
+                <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+              </div>
             </div>
             <h3 className="font-bold text-foreground text-sm mb-1">{cat.label}</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">{cat.desc}</p>

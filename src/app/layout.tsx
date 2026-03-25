@@ -14,8 +14,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head />
-      <body>
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+      </head>
+      <body suppressHydrationWarning>
         <script
           dangerouslySetInnerHTML={{
             __html: `if(localStorage.getItem('efm-theme')==='light')document.documentElement.classList.add('light')`,

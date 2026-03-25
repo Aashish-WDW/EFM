@@ -38,8 +38,8 @@ function DashboardSkeleton() {
         <div className="bg-surface-container-highest rounded-xl p-5 edge-glow">
           <Skeleton className="h-3 w-28 mb-4" />
           <div className="flex items-end gap-3 h-[260px] pt-8">
-            {Array.from({ length: 7 }).map((_, i) => (
-              <Skeleton key={i} className="flex-1 rounded-t" style={{ height: `${30 + Math.random() * 60}%` }} />
+            {[45, 60, 35, 80, 50, 75, 90].map((height, i) => (
+              <Skeleton key={i} className="flex-1 rounded-t" style={{ height: `${height}%` }} />
             ))}
           </div>
         </div>

@@ -29,10 +29,79 @@ const taskOverrides = [
   { icon: Settings2, label: 'OVERRIDE AIRLOCK', desc: 'Temporary override of secure stable zone containment protocols.', badge: 'MANUAL OVERRIDE', badgeColor: 'bg-primary/20 text-primary', status: 'ACTIVE STATUS', enabled: true },
 ];
 
-export default function PermissionsPage() {
-  const [selectedPerson, setSelectedPerson] = useState(0);
-  const [search, setSearch] = useState('');
+const defaultPermissionsByRole: Record<string, { global: boolean[]; reporting: boolean[]; overrides: boolean[] }> = {
+  'SYSTEM ADMIN': {
+    global: [true, true, true],
+    reporting: [true, true, true],
+    overrides: [true, true, false, true, true]
+  },
+  'GROUND OPERATIONS': {
+    global: [false, false, false],
+    reporting: [true, false, true],
+    overrides: [false, true, false, false, false]
+  },
+  'LEAD VETERINARY': {
+    global: [false, false, true],
+    reporting: [true, true, true],
+    overrides: [false, true, false, true, false]
+  },
+  'FINANCE DIRECTOR': {
+    global: [true, true, false],
+    reporting: [true, true, true],
+    overrides: [false, false, false, false, false]
+  }
+};
 
+export default function PermissionsPage() {
+  const [selectedPersonIdx, setSelectedPersonIdx] = useState(0);
+  const [search, setSearch] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Derive current role based on selected person
+  const selectedPerson = personnel[selectedPersonIdx];
+  const roleDefaults = defaultPermissionsByRole[selectedPerson.role] || defaultPermissionsByRole['GROUND OPERATIONS'];
+
+  // State for permissions (simulating per-person state)
+  const [globalState, setGlobalState] = useState(roleDefaults.global);
+  const [reportingState, setReportingState] = useState(roleDefaults.reporting);
+  const [overridesState, setOverridesState] = useState(roleDefaults.overrides);
+
+  // Update states when person changes
+  useState(() => {
+    const roleDefaults = defaultPermissionsByRole[selectedPerson.role] || defaultPermissionsByRole['GROUND OPERATIONS'];
+    setGlobalState(roleDefaults.global);
+    setReportingState(roleDefaults.reporting);
+    setOverridesState(roleDefaults.overrides);
+  });
+
+  const handleToggle = (type: 'global' | 'reporting' | 'override', index: number) => {
+    if (type === 'global') {
+      const next = [...globalState];
+      next[index] = !next[index];
+      setGlobalState(next);
+    } else if (type === 'reporting') {
+      const next = [...reportingState];
+      next[index] = !next[index];
+      setReportingState(next);
+    } else {
+      const next = [...overridesState];
+      next[index] = !next[index];
+      setOverridesState(next);
+    }
+  };
+
+  const filteredPersonnel = personnel.filter(p => 
+    p.name.toLowerCase().includes(search.toLowerCase()) || 
+    p.role.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleSave = () => {
+    setIsSaving(true);
+    setTimeout(() => {
+      setIsSaving(false);
+      alert(`Permissions saved for ${selectedPerson.name}`);
+    }, 1000);
+  };
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -43,11 +112,23 @@ export default function PermissionsPage() {
           <p className="text-sm text-muted-foreground mt-1 max-w-lg">Configure global access matrices and individual task overrides. Changes are logged in real-time.</p>
         </div>
         <div className="flex gap-2 shrink-0">
-          <button className="h-9 px-3 sm:px-4 rounded-lg border border-border text-foreground text-sm font-medium flex items-center gap-2 hover:bg-surface-container-high">
+          <button 
+            onClick={() => alert('Exporting permission logs...')}
+            className="h-9 px-3 sm:px-4 rounded-lg border border-border text-foreground text-sm font-medium flex items-center gap-2 hover:bg-surface-container-high transition-colors"
+          >
             <Download className="w-4 h-4" /> <span className="hidden sm:inline">EXPORT LOG</span>
           </button>
-          <button className="h-9 px-3 sm:px-4 rounded-lg bg-gradient-to-r from-primary to-primary-dim text-primary-foreground text-sm font-medium flex items-center gap-2">
-            <Save className="w-4 h-4" /> SAVE
+          <button 
+            onClick={handleSave}
+            disabled={isSaving}
+            className="h-9 px-3 sm:px-4 rounded-lg bg-gradient-to-r from-primary to-primary-dim text-primary-foreground text-sm font-medium flex items-center gap-2 hover:opacity-90 disabled:opacity-50 transition-all min-w-[100px] justify-center"
+          >
+            {isSaving ? (
+              <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
+            {isSaving ? 'SAVING...' : 'SAVE CHANGES'}
           </button>
         </div>
       </div>
@@ -74,22 +155,31 @@ export default function PermissionsPage() {
               />
             </div>
             <div className="space-y-1">
-              {personnel.map((p, i) => (
-                <button
-                  key={p.name}
-                  onClick={() => setSelectedPerson(i)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors border-l-2 ${i === selectedPerson ? 'bg-surface-container-high border-primary' : 'border-transparent hover:bg-surface-container-high/50'}`}
-                >
-                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold shrink-0">
-                    {p.name.split(' ').map(n => n[0]).join('')}
-                  </div>
-                  <div className="min-w-0">
-                    <p className={`text-sm font-semibold truncate ${i === selectedPerson ? 'text-foreground' : 'text-muted-foreground'}`}>{p.name}</p>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{p.role}</p>
-                  </div>
-                  {p.active && <div className="w-2 h-2 rounded-full bg-success ml-auto shrink-0" />}
-                </button>
-              ))}
+              {filteredPersonnel.map((p, i) => {
+                const actualIndex = personnel.findIndex(pers => pers.name === p.name);
+                return (
+                  <button
+                    key={p.name}
+                    onClick={() => {
+                      setSelectedPersonIdx(actualIndex);
+                      const defaults = defaultPermissionsByRole[p.role] || defaultPermissionsByRole['GROUND OPERATIONS'];
+                      setGlobalState(defaults.global);
+                      setReportingState(defaults.reporting);
+                      setOverridesState(defaults.overrides);
+                    }}
+                    className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors border-l-2 ${actualIndex === selectedPersonIdx ? 'bg-surface-container-high border-primary' : 'border-transparent hover:bg-surface-container-high/50'}`}
+                  >
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold shrink-0">
+                      {p.name.split(' ').map(n => n[0]).join('')}
+                    </div>
+                    <div className="min-w-0">
+                      <p className={`text-sm font-semibold truncate ${actualIndex === selectedPersonIdx ? 'text-foreground' : 'text-muted-foreground'}`}>{p.name}</p>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{p.role}</p>
+                    </div>
+                    {p.active && <div className="w-2 h-2 rounded-full bg-success ml-auto shrink-0" />}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -114,14 +204,17 @@ export default function PermissionsPage() {
                 <h3 className="heading-md text-foreground uppercase tracking-wider text-sm">Global Management</h3>
               </div>
               <div className="space-y-4">
-                {globalPerms.map(p => (
+                {globalPerms.map((p, idx) => (
                   <div key={p.label} className={`flex items-center justify-between ${p.highlight ? 'border-l-2 border-destructive pl-3 -ml-3' : ''}`}>
                     <div>
                       <p className={`text-sm font-semibold ${p.highlight ? 'text-destructive' : 'text-foreground'}`}>{p.label}</p>
                       <p className="text-[10px] text-muted-foreground mono-data">Permission node: {p.node}</p>
                     </div>
-                    <div className={`w-11 h-6 rounded-full flex items-center px-0.5 cursor-pointer transition-colors ${p.enabled ? 'bg-primary' : 'bg-surface-container-high border border-border'}`}>
-                      <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${p.enabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                    <div 
+                      onClick={() => handleToggle('global', idx)}
+                      className={`w-11 h-6 rounded-full flex items-center px-0.5 cursor-pointer transition-colors ${globalState[idx] ? 'bg-primary' : 'bg-surface-container-high border border-border'}`}
+                    >
+                      <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${globalState[idx] ? 'translate-x-5' : 'translate-x-0'}`} />
                     </div>
                   </div>
                 ))}
@@ -135,14 +228,17 @@ export default function PermissionsPage() {
                 <h3 className="heading-md text-foreground uppercase tracking-wider text-sm">Reporting & Analytics</h3>
               </div>
               <div className="space-y-4">
-                {reportingPerms.map(p => (
+                {reportingPerms.map((p, idx) => (
                   <div key={p.label} className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-semibold text-foreground">{p.label}</p>
                       <p className="text-[10px] text-muted-foreground mono-data">Permission node: {p.node}</p>
                     </div>
-                    <div className={`w-11 h-6 rounded-full flex items-center px-0.5 cursor-pointer transition-colors ${p.enabled ? 'bg-primary' : 'bg-surface-container-high border border-border'}`}>
-                      <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${p.enabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                    <div 
+                      onClick={() => handleToggle('reporting', idx)}
+                      className={`w-11 h-6 rounded-full flex items-center px-0.5 cursor-pointer transition-colors ${reportingState[idx] ? 'bg-primary' : 'bg-surface-container-high border border-border'}`}
+                    >
+                      <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${reportingState[idx] ? 'translate-x-5' : 'translate-x-0'}`} />
                     </div>
                   </div>
                 ))}
@@ -158,24 +254,28 @@ export default function PermissionsPage() {
                 <h3 className="heading-md text-foreground uppercase tracking-wider text-sm">Operational Task Overrides</h3>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] text-muted-foreground bg-surface-container-high px-3 py-1.5 rounded tracking-wider">TARGET: {personnel[selectedPerson].name.toUpperCase()}</span>
+                <span className="text-[10px] text-muted-foreground bg-surface-container-high px-3 py-1.5 rounded tracking-wider uppercase">TARGET: {selectedPerson.name}</span>
                 <span className="px-2 py-1 rounded bg-primary/20 text-primary text-[10px] font-bold flex items-center gap-1">ADMIN <CheckCircle className="w-3 h-3" /></span>
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {taskOverrides.map((t, i) => (
-                <div key={t.label} className={`rounded-lg p-4 border ${t.enabled ? 'border-border bg-surface-container-high/50' : 'border-border/50 bg-surface-container/50 opacity-60'}`}>
+                <div 
+                  key={t.label} 
+                  onClick={() => handleToggle('override', i)}
+                  className={`rounded-lg p-4 border cursor-pointer transition-all ${overridesState[i] ? 'border-primary bg-surface-container-high/80' : 'border-border/50 bg-surface-container/50 opacity-60'}`}
+                >
                   <div className="flex items-start justify-between mb-3">
-                    <div className={`w-8 h-8 rounded-lg ${t.enabled ? 'bg-primary/15' : 'bg-muted'} flex items-center justify-center`}>
-                      <t.icon className={`w-4 h-4 ${t.enabled ? 'text-primary' : 'text-muted-foreground'}`} />
+                    <div className={`w-8 h-8 rounded-lg ${overridesState[i] ? 'bg-primary/20' : 'bg-muted'} flex items-center justify-center transition-colors`}>
+                      <t.icon className={`w-4 h-4 ${overridesState[i] ? 'text-primary' : 'text-muted-foreground'}`} />
                     </div>
-                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold tracking-wider ${t.badgeColor}`}>{t.badge}</span>
+                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold tracking-wider ${overridesState[i] ? t.badgeColor : 'bg-muted text-muted-foreground'}`}>{overridesState[i] ? t.badge : 'DISABLED'}</span>
                   </div>
                   <h4 className="font-bold text-foreground text-sm mb-1">{t.label}</h4>
                   <p className="text-[11px] text-muted-foreground leading-relaxed mb-3">{t.desc}</p>
                   <div className="flex items-center justify-between">
-                    <span className={`label-sm ${t.enabled ? 'text-success' : 'text-muted-foreground'}`}>{t.status}</span>
-                    {t.enabled ? <CheckCircle className="w-4 h-4 text-success" /> : <Lock className="w-4 h-4 text-muted-foreground" />}
+                    <span className={`label-sm ${overridesState[i] ? 'text-success' : 'text-muted-foreground'}`}>{overridesState[i] ? 'ACTIVE STATUS' : 'DISABLED'}</span>
+                    {overridesState[i] ? <CheckCircle className="w-4 h-4 text-success" /> : <Lock className="w-4 h-4 text-muted-foreground" />}
                   </div>
                 </div>
               ))}

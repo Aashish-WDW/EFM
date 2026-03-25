@@ -15,7 +15,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen bg-background lens-flare">
       {/* Desktop Sidebar */}
-      <div className="hidden md:block sticky top-0 h-screen">
+      <div className="hidden md:block sticky top-0 h-screen z-30">
         <AppSidebar collapsed={collapsed} onToggle={() => setCollapsed(c => !c)} />
       </div>
 

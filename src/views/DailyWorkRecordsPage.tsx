@@ -1,12 +1,27 @@
 'use client';
+import { useState, useMemo } from 'react';
 import { workRecords } from '@/data/seed';
-import { Download, Users, ListChecks, Clock, TrendingUp } from 'lucide-react';
+import { Search, SlidersHorizontal, X, Users, ListChecks, Clock, TrendingUp } from 'lucide-react';
 import HorseIcon from '@/components/shared/HorseIcon';
+import SelectField from '@/components/shared/SelectField';
+import ExportDialog from '@/components/shared/ExportDialog';
+
+const uniqueCategories = [...new Set(workRecords.map(w => w.staffCategory))];
 
 export default function DailyWorkRecordsPage() {
+  const [search, setSearch] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterCategory, setFilterCategory] = useState('');
+
   const totalHours = workRecords.reduce((sum, wr) => sum + wr.entries.reduce((s, e) => s + e.totalHours, 0), 0);
   const totalTasks = workRecords.reduce((s, w) => s + w.entries.length, 0);
   const avgHours = (totalHours / workRecords.length).toFixed(1);
+
+  const filtered = useMemo(() => workRecords.filter(w => {
+    if (search && !w.staffName.toLowerCase().includes(search.toLowerCase())) return false;
+    if (filterCategory && w.staffCategory !== filterCategory) return false;
+    return true;
+  }), [search, filterCategory]);
 
   return (
     <div className="space-y-6">
@@ -15,9 +30,11 @@ export default function DailyWorkRecordsPage() {
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Daily Work Records</h1>
           <p className="text-sm text-muted-foreground mt-1">Consolidated view of all daily work</p>
         </div>
-        <button className="h-9 px-4 rounded-lg border border-border text-foreground text-sm font-medium flex items-center gap-2 hover:bg-surface-container-high transition-colors self-start sm:self-auto shrink-0">
-          <Download className="w-4 h-4" /> Export CSV
-        </button>
+        <ExportDialog filename="daily-work-records" trigger={
+          <button className="h-9 px-4 rounded-lg border border-border text-foreground text-sm font-medium flex items-center gap-2 hover:bg-surface-container-high transition-colors self-start sm:self-auto shrink-0">
+            Export CSV
+          </button>
+        } />
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-2 gap-4">
@@ -55,6 +72,34 @@ export default function DailyWorkRecordsPage() {
         </div>
       </div>
 
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search staff..." className="w-full h-9 pl-10 pr-8 rounded-lg bg-surface-container-high border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
+          {search && <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="w-3.5 h-3.5" /></button>}
+        </div>
+        <button
+          onClick={() => setShowFilters(v => !v)}
+          className={`h-9 px-3 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors ${showFilters || filterCategory ? 'bg-primary/15 text-primary border border-primary/30' : 'bg-surface-container-high text-muted-foreground hover:text-foreground'}`}
+        >
+          <SlidersHorizontal className="w-4 h-4" /> Filters
+          {filterCategory && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
+        </button>
+      </div>
+
+      {showFilters && (
+        <div className="flex flex-wrap gap-3 items-end px-4 py-3 bg-surface-container-highest rounded-xl border border-border/50">
+          <div className="w-48">
+            <SelectField label="CATEGORY" options={['All', ...uniqueCategories]} value={filterCategory || 'All'} size="sm" onChange={(v: string) => setFilterCategory(v === 'All' ? '' : v)} />
+          </div>
+          {filterCategory && (
+            <button onClick={() => setFilterCategory('')} className="h-9 px-3 rounded-lg text-xs text-destructive border border-destructive/30 hover:bg-destructive/10 transition-colors flex items-center gap-1.5">
+              <X className="w-3 h-3" /> Clear
+            </button>
+          )}
+        </div>
+      )}
+
       <div className="bg-surface-container-highest rounded-xl edge-glow overflow-hidden">
         <div className="overflow-x-auto">
         <table className="w-full text-sm min-w-[550px]">
@@ -69,7 +114,7 @@ export default function DailyWorkRecordsPage() {
             </tr>
           </thead>
           <tbody>
-            {workRecords.map(wr => {
+            {filtered.map(wr => {
               const hrs = wr.entries.reduce((s, e) => s + e.totalHours, 0);
               const eff = Math.min(100, Math.round((hrs / 8) * 100));
               return (
@@ -90,6 +135,9 @@ export default function DailyWorkRecordsPage() {
                 </tr>
               );
             })}
+            {filtered.length === 0 && (
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">No records match your filters.</td></tr>
+            )}
           </tbody>
         </table>
         </div>

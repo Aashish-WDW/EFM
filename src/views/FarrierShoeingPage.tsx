@@ -1,10 +1,11 @@
 'use client';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { farrierShoeings } from '@/data/seed';
 import FormDialog from '@/components/shared/FormDialog';
 import SelectField from '@/components/shared/SelectField';
-import { Hammer, AlertTriangle, CheckCircle, Calendar, SlidersHorizontal, Download, Plus } from 'lucide-react';
+import { Hammer, AlertTriangle, CheckCircle, Calendar, SlidersHorizontal, Search, X, Plus } from 'lucide-react';
 import DatePicker from '@/components/shared/DatePicker';
+import ExportDialog from '@/components/shared/ExportDialog';
 
 const inp = 'w-full h-10 px-3 rounded-lg bg-surface-container-high border border-border text-foreground text-sm placeholder:text-muted-foreground/50 focus:ring-1 focus:ring-primary outline-none';
 const lbl = 'label-sm text-muted-foreground block mb-1.5';
@@ -36,15 +37,32 @@ function AddShoeingForm() {
   );
 }
 
+const uniqueFarriers = [...new Set(farrierShoeings.map(f => f.farrierName))];
+
 export default function FarrierShoeingPage() {
   const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterStatus, setFilterStatus] = useState('');
+  const [filterFarrier, setFilterFarrier] = useState('');
   const perPage = 5;
-  const totalPages = Math.ceil(farrierShoeings.length / perPage);
-  const paginated = farrierShoeings.slice((currentPage - 1) * perPage, currentPage * perPage);
+
+  const filtered = useMemo(() => farrierShoeings.filter(f => {
+    if (search && !f.horseName.toLowerCase().includes(search.toLowerCase()) && !f.farrierName.toLowerCase().includes(search.toLowerCase())) return false;
+    if (filterStatus && f.status !== filterStatus) return false;
+    if (filterFarrier && f.farrierName !== filterFarrier) return false;
+    return true;
+  }), [search, filterStatus, filterFarrier]);
+
+  const totalPages = Math.ceil(filtered.length / perPage);
+  const paginated = filtered.slice((currentPage - 1) * perPage, currentPage * perPage);
 
   const completedCount = farrierShoeings.filter(f => f.status === 'Completed').length;
   const overdueCount = farrierShoeings.filter(f => f.status === 'Overdue').length;
   const scheduledCount = farrierShoeings.filter(f => f.status === 'Scheduled').length;
+
+  const hasActiveFilters = filterStatus || filterFarrier;
+  const clearFilters = () => { setFilterStatus(''); setFilterFarrier(''); };
 
   const kpis = [
     { label: 'TOTAL RECORDS', value: farrierShoeings.length, sub: 'All shoeing entries', subColor: 'text-muted-foreground', icon: Hammer },
@@ -66,13 +84,18 @@ export default function FarrierShoeingPage() {
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Farrier <span className="text-primary">Shoeing</span></h1>
           <p className="text-sm text-muted-foreground mt-1">Track shoeing schedules, records, and farrier assignments.</p>
         </div>
-        <FormDialog trigger={
-          <button className="h-10 px-4 sm:px-5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:brightness-110 transition-all self-start sm:self-auto flex items-center gap-2">
-            <Plus className="w-4 h-4" /> Add Record
-          </button>
-        } title="Add Shoeing Record">
-          <AddShoeingForm />
-        </FormDialog>
+        <div className="flex gap-2 shrink-0">
+          <ExportDialog filename="farrier-shoeing" trigger={
+            <button className="h-10 px-4 sm:px-5 rounded-lg border border-border text-foreground text-sm font-medium hover:bg-surface-container-high transition-colors">Export</button>
+          } />
+          <FormDialog trigger={
+            <button className="h-10 px-4 sm:px-5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:brightness-110 transition-all flex items-center gap-2">
+              <Plus className="w-4 h-4" /> Add Record
+            </button>
+          } title="Add Shoeing Record">
+            <AddShoeingForm />
+          </FormDialog>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-2 gap-4">
@@ -91,10 +114,54 @@ export default function FarrierShoeingPage() {
         <div className="flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 border-b border-border">
           <h2 className="text-base sm:text-lg font-bold text-foreground">Shoeing Records</h2>
           <div className="flex items-center gap-2">
-            <button className="p-2 rounded-lg bg-surface-container-high text-muted-foreground hover:text-foreground"><SlidersHorizontal className="w-4 h-4" /></button>
-            <button className="p-2 rounded-lg bg-surface-container-high text-muted-foreground hover:text-foreground"><Download className="w-4 h-4" /></button>
+            <div className="relative hidden sm:block">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <input
+                value={search}
+                onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
+                placeholder="Search horse or farrier..."
+                className="h-8 pl-8 pr-3 w-48 rounded-lg bg-surface-container-high text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
+              />
+              {search && <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="w-3 h-3" /></button>}
+            </div>
+            <button
+              onClick={() => setShowFilters(v => !v)}
+              className={`p-2 rounded-lg transition-colors ${showFilters || hasActiveFilters ? 'bg-primary/15 text-primary' : 'bg-surface-container-high text-muted-foreground hover:text-foreground'}`}
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+            </button>
           </div>
         </div>
+
+        {showFilters && (
+          <div className="px-3 sm:px-6 py-4 border-b border-border bg-surface-container-high/50">
+            <div className="flex flex-wrap gap-3 items-end">
+              <div className="w-full sm:hidden mb-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                  <input
+                    value={search}
+                    onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
+                    placeholder="Search horse or farrier..."
+                    className="h-9 pl-8 pr-3 w-full rounded-lg bg-surface-container-high border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
+                  />
+                </div>
+              </div>
+              <div className="w-40">
+                <SelectField label="STATUS" options={['All', 'Scheduled', 'Completed', 'Overdue']} value={filterStatus || 'All'} size="sm" onChange={(v: string) => { setFilterStatus(v === 'All' ? '' : v); setCurrentPage(1); }} />
+              </div>
+              <div className="w-44">
+                <SelectField label="FARRIER" options={['All', ...uniqueFarriers]} value={filterFarrier || 'All'} size="sm" onChange={(v: string) => { setFilterFarrier(v === 'All' ? '' : v); setCurrentPage(1); }} />
+              </div>
+              {hasActiveFilters && (
+                <button onClick={clearFilters} className="h-9 px-3 rounded-lg text-xs text-destructive border border-destructive/30 hover:bg-destructive/10 transition-colors flex items-center gap-1.5">
+                  <X className="w-3 h-3" /> Clear Filters
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="overflow-x-auto">
         <table className="w-full min-w-[620px]">
           <thead>
@@ -126,11 +193,14 @@ export default function FarrierShoeingPage() {
                 </td>
               </tr>
             ))}
+            {paginated.length === 0 && (
+              <tr><td colSpan={6} className="px-6 py-8 text-center text-sm text-muted-foreground">No records match your filters.</td></tr>
+            )}
           </tbody>
         </table>
         </div>
         <div className="flex items-center justify-between px-3 sm:px-6 py-3 border-t border-border">
-          <span className="text-xs text-muted-foreground mono-data hidden sm:block">Displaying {paginated.length} of {farrierShoeings.length} records</span>
+          <span className="text-xs text-muted-foreground mono-data hidden sm:block">Displaying {paginated.length} of {filtered.length} records</span>
           <div className="flex items-center gap-2">
             <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-30">Previous</button>
             {Array.from({ length: totalPages }, (_, i) => (

@@ -1,8 +1,9 @@
 'use client';
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, SlidersHorizontal, Calendar, Users, Clock, MapPin, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, SlidersHorizontal, Calendar, Users, Clock, MapPin, Plus, Download } from 'lucide-react';
 import { meetings } from '@/data/seed';
 import FormDialog from '@/components/shared/FormDialog';
+import ExportDialog from '@/components/shared/ExportDialog';
 import SelectField from '@/components/shared/SelectField';
 import DatePicker from '@/components/shared/DatePicker';
 import TimePicker from '@/components/shared/TimePicker';
@@ -10,7 +11,7 @@ import TimePicker from '@/components/shared/TimePicker';
 const inp = 'w-full h-10 px-3 rounded-lg bg-surface-container-high border border-border text-foreground text-sm placeholder:text-muted-foreground/50 focus:ring-1 focus:ring-primary outline-none';
 const lbl = 'label-sm text-muted-foreground block mb-1.5';
 
-function StartMeetingForm() {
+function StartMeetingForm({ defaultDate }: { defaultDate?: string }) {
   return (
     <div className="space-y-4 mt-2">
       <div>
@@ -18,7 +19,7 @@ function StartMeetingForm() {
         <input type="text" placeholder="e.g. Weekly Stable Operations Review" className={inp} />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <DatePicker label="DATE" defaultValue={new Date().toISOString().split('T')[0]} />
+        <DatePicker label="DATE" defaultValue={defaultDate ?? new Date().toISOString().split('T')[0]} />
         <TimePicker label="TIME" />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -61,6 +62,8 @@ export default function MeetingsPage() {
   const [currentDate, setCurrentDate] = useState(new Date(2026, 2));
   const [activeFilter, setActiveFilter] = useState<string>('All');
   const [search, setSearch] = useState('');
+  const [meetingFormOpen, setMeetingFormOpen] = useState(false);
+  const [selectedCalDate, setSelectedCalDate] = useState<string | undefined>(undefined);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -82,6 +85,12 @@ export default function MeetingsPage() {
 
   const scheduledCount = meetings.filter(m => m.status === 'Scheduled').length;
 
+  const handleDayClick = (day: number) => {
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    setSelectedCalDate(dateStr);
+    setMeetingFormOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -92,13 +101,23 @@ export default function MeetingsPage() {
             Schedule and track team meetings &nbsp;·&nbsp; Shift: Morning Alpha
           </p>
         </div>
-        <div className="bg-surface-container-highest rounded-xl p-4 edge-glow flex items-center gap-4 shrink-0">
-          <div className="w-14 h-14 rounded-full border-2 border-primary flex items-center justify-center">
-            <span className="text-lg font-bold text-primary">{scheduledCount}</span>
-          </div>
-          <div>
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Upcoming</p>
-            <p className="text-lg font-bold text-foreground">Meeting Queue</p>
+        <div className="flex items-center gap-3 shrink-0">
+          <ExportDialog
+            filename="meetings"
+            trigger={
+              <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:text-foreground hover:bg-surface-container-high transition-colors">
+                <Download className="w-4 h-4" /> Export
+              </button>
+            }
+          />
+          <div className="bg-surface-container-highest rounded-xl p-4 edge-glow flex items-center gap-4">
+            <div className="w-14 h-14 rounded-full border-2 border-primary flex items-center justify-center">
+              <span className="text-lg font-bold text-primary">{scheduledCount}</span>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Upcoming</p>
+              <p className="text-lg font-bold text-foreground">Meeting Queue</p>
+            </div>
           </div>
         </div>
       </div>
@@ -121,13 +140,19 @@ export default function MeetingsPage() {
           ))}
         </div>
         <div className="flex items-center gap-3 sm:ml-auto">
-          <FormDialog trigger={
-            <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shrink-0">
-              <Plus className="w-4 h-4" />
-              Start Meeting
-            </button>
-          } title="Schedule Meeting">
-            <StartMeetingForm />
+          {/* Controlled FormDialog triggered from both button and calendar */}
+          <FormDialog
+            open={meetingFormOpen}
+            onOpenChange={open => { setMeetingFormOpen(open); if (!open) setSelectedCalDate(undefined); }}
+            trigger={
+              <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shrink-0">
+                <Plus className="w-4 h-4" />
+                Start Meeting
+              </button>
+            }
+            title="Schedule Meeting"
+          >
+            <StartMeetingForm defaultDate={selectedCalDate} />
           </FormDialog>
           <div className="relative flex-1 sm:flex-none">
             <input
@@ -170,10 +195,12 @@ export default function MeetingsPage() {
                 return (
                   <div
                     key={day}
-                    className={`aspect-square flex items-center justify-center relative rounded-lg text-sm transition-colors cursor-pointer ${
+                    onClick={() => handleDayClick(day)}
+                    title={`Schedule meeting on ${day} ${monthName}`}
+                    className={`aspect-square flex items-center justify-center relative rounded-lg text-sm transition-all cursor-pointer group ${
                       isToday ? 'bg-primary text-primary-foreground font-bold' :
-                      hasMeeting ? 'bg-primary/10 text-primary' :
-                      'text-muted-foreground hover:bg-surface-container-high'
+                      hasMeeting ? 'bg-primary/10 text-primary hover:bg-primary/20' :
+                      'text-muted-foreground hover:bg-surface-container-high hover:text-foreground'
                     }`}
                   >
                     {day}
@@ -181,6 +208,12 @@ export default function MeetingsPage() {
                       <span className={`absolute bottom-1 w-1.5 h-1.5 rounded-full ${
                         meetingStatus === 'Scheduled' ? 'bg-primary' : meetingStatus === 'Completed' ? 'bg-success' : 'bg-destructive'
                       }`} />
+                    )}
+                    {/* Hover hint for empty days */}
+                    {!hasMeeting && !isToday && (
+                      <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Plus className="w-2.5 h-2.5 text-primary absolute top-0.5 right-0.5" />
+                      </span>
                     )}
                   </div>
                 );
@@ -190,6 +223,7 @@ export default function MeetingsPage() {
               <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><span className="w-2.5 h-2.5 rounded-full bg-primary" /> Scheduled</span>
               <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><span className="w-2.5 h-2.5 rounded-full bg-success" /> Completed</span>
               <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><span className="w-2.5 h-2.5 rounded-full bg-destructive" /> Cancelled</span>
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground text-primary italic ml-auto">Click any day to schedule</span>
             </div>
           </div>
 

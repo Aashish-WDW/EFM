@@ -1,6 +1,7 @@
 'use client';
 import { useState, useMemo, useRef } from 'react';
 import { Search, Download, Plus, SlidersHorizontal, ChevronLeft, ChevronRight, Zap, BarChart3, ShieldCheck, ClipboardList, MoreVertical, Upload, X, Pencil, Trash2 } from 'lucide-react';
+import ExportDialog from '@/components/shared/ExportDialog';
 import { horses } from '@/data/seed';
 import FormDialog from '@/components/shared/FormDialog';
 import SelectField from '@/components/shared/SelectField';
@@ -243,9 +244,11 @@ export default function HorsesPage() {
             <p className="text-muted-foreground mt-2 italic text-sm hidden sm:block">"Stability is the foundation of excellence in equine care and operational data integrity."</p>
           </div>
           <div className="flex items-center gap-3">
-            <button className="inline-flex items-center gap-2 h-10 px-4 sm:px-5 rounded-lg border border-border text-foreground text-sm font-medium hover:bg-muted transition-colors">
-              <Download className="w-4 h-4" /><span className="hidden sm:inline">Export</span>
-            </button>
+            <ExportDialog filename="horses" trigger={
+              <button className="inline-flex items-center gap-2 h-10 px-4 sm:px-5 rounded-lg border border-border text-foreground text-sm font-medium hover:bg-muted transition-colors">
+                <Download className="w-4 h-4" /><span className="hidden sm:inline">Export</span>
+              </button>
+            } />
             <FormDialog
               trigger={
                 <button className="inline-flex items-center gap-2 h-10 px-4 sm:px-5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:brightness-110 transition-all">

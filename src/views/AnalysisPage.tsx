@@ -5,6 +5,7 @@ import {
   BarChart3, DollarSign, Users, Heart, TrendingUp, Activity, ArrowUpRight,
   Calendar, Filter, ChevronDown, Maximize2, Download, RefreshCw
 } from 'lucide-react';
+import ExportDialog from '@/components/shared/ExportDialog';
 import {
   Area, AreaChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip,
   Bar, BarChart, PieChart, Pie, Cell, Legend, Treemap, RadialBarChart, RadialBar
@@ -154,9 +155,11 @@ export default function AnalysisPage() {
           <button className="h-8 px-3 rounded-lg border border-border text-muted-foreground text-xs flex items-center gap-1.5 hover:text-foreground transition-colors">
             <RefreshCw className="w-3 h-3" /> Refresh
           </button>
-          <button className="h-8 px-3 rounded-lg border border-border text-muted-foreground text-xs flex items-center gap-1.5 hover:text-foreground transition-colors">
-            <Download className="w-3 h-3" /> Export
-          </button>
+          <ExportDialog filename="analysis" trigger={
+            <button className="h-8 px-3 rounded-lg border border-border text-muted-foreground text-xs flex items-center gap-1.5 hover:text-foreground transition-colors">
+              <Download className="w-3 h-3" /> Export
+            </button>
+          } />
         </div>
       </div>
 
@@ -181,23 +184,24 @@ export default function AnalysisPage() {
         {/* Trend Area Chart - large tile */}
         <ChartCard title="Facility Growth Trend" subtitle="Monthly overview" className="col-span-12 lg:col-span-8">
           <ResponsiveContainer width="100%" height={260}>
-            <AreaChart data={monthlyTrend}>
+            <AreaChart data={monthlyTrend} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
               <defs>
                 <linearGradient id="gradHorses" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(273 100% 80%)" stopOpacity={0.3} />
+                  <stop offset="0%" stopColor="hsl(273 100% 80%)" stopOpacity={0.35} />
                   <stop offset="100%" stopColor="hsl(273 100% 80%)" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="gradStaff" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(120 60% 50%)" stopOpacity={0.2} />
+                  <stop offset="0%" stopColor="hsl(120 60% 50%)" stopOpacity={0.25} />
                   <stop offset="100%" stopColor="hsl(120 60% 50%)" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(260 5% 15%)" />
-              <XAxis dataKey="month" tick={{ fontSize: 10, fill: 'hsl(240 5% 45%)' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: 'hsl(240 5% 45%)' }} axisLine={false} tickLine={false} width={30} />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(260 5% 18%)" />
+              <XAxis dataKey="month" tick={{ fontSize: 11, fill: 'hsl(240 5% 55%)', fontWeight: 600 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: 'hsl(240 5% 50%)' }} axisLine={false} tickLine={false} width={30} allowDecimals={false} />
               <Tooltip contentStyle={tooltipStyle} />
-              <Area type="monotone" dataKey="horses" stroke="hsl(273 100% 80%)" strokeWidth={2} fill="url(#gradHorses)" name="Horses" />
-              <Area type="monotone" dataKey="staff" stroke="hsl(120 60% 50%)" strokeWidth={2} fill="url(#gradStaff)" name="Staff" />
+              <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, paddingTop: 8 }} formatter={(v) => <span style={{ color: 'hsl(240,5%,65%)' }}>{v}</span>} />
+              <Area type="monotone" dataKey="horses" stroke="hsl(273 100% 80%)" strokeWidth={2.5} fill="url(#gradHorses)" name="Horses" dot={{ r: 3, fill: 'hsl(273 100% 80%)' }} />
+              <Area type="monotone" dataKey="staff" stroke="hsl(120 60% 50%)" strokeWidth={2.5} fill="url(#gradStaff)" name="Staff" dot={{ r: 3, fill: 'hsl(120 60% 50%)' }} />
             </AreaChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -220,11 +224,11 @@ export default function AnalysisPage() {
         {/* Staff by Role */}
         <ChartCard title="Staff by Role" subtitle="Distribution" className="col-span-12 lg:col-span-6">
           <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={teamByRole.filter(r => r.count > 0).slice(0, 10)} layout="vertical" margin={{ left: 10 }}>
-              <XAxis type="number" tick={{ fontSize: 10, fill: 'hsl(240 5% 45%)' }} axisLine={false} tickLine={false} />
-              <YAxis dataKey="role" type="category" width={100} tick={{ fontSize: 9, fill: 'hsl(240 5% 55%)' }} axisLine={false} tickLine={false} />
+            <BarChart data={teamByRole.filter(r => r.count > 0).slice(0, 10)} layout="vertical" margin={{ left: 8, right: 32, top: 4, bottom: 4 }}>
+              <XAxis type="number" tick={{ fontSize: 10, fill: 'hsl(240 5% 45%)' }} axisLine={false} tickLine={false} allowDecimals={false} />
+              <YAxis dataKey="role" type="category" width={108} tick={{ fontSize: 9, fill: 'hsl(240 5% 60%)' }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={tooltipStyle} />
-              <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={14}>
+              <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={14} label={{ position: 'right', fontSize: 9, fill: 'hsl(240 5% 55%)', fontWeight: 600 }}>
                 {teamByRole.map((entry, i) => <Cell key={i} fill={entry.color} />)}
               </Bar>
             </BarChart>
@@ -262,14 +266,19 @@ export default function AnalysisPage() {
         <ChartCard title="Horses by Coat" subtitle="Color distribution" className="col-span-6 lg:col-span-3">
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
-              <Pie data={horseBreedData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={75} strokeWidth={0}
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+              <Pie data={horseBreedData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={68} strokeWidth={2} stroke="hsl(240,5%,10%)">
                 {horseBreedData.map((_, i) => {
-                  const colors = ['hsl(30 60% 45%)', 'hsl(0 0% 45%)', 'hsl(25 70% 40%)', 'hsl(0 0% 15%)'];
+                  const colors = ['hsl(30 60% 50%)', 'hsl(0 0% 50%)', 'hsl(25 70% 45%)', 'hsl(0 0% 20%)'];
                   return <Cell key={i} fill={colors[i % colors.length]} />;
                 })}
               </Pie>
               <Tooltip contentStyle={tooltipStyle} />
+              <Legend
+                iconType="circle"
+                iconSize={7}
+                wrapperStyle={{ fontSize: 9, paddingTop: 8 }}
+                formatter={(value) => <span style={{ color: 'hsl(240,5%,55%)' }}>{value}</span>}
+              />
             </PieChart>
           </ResponsiveContainer>
         </ChartCard>

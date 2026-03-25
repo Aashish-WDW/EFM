@@ -1,10 +1,11 @@
 'use client';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { horseFeedLogs, horses } from '@/data/seed';
 import FormDialog from '@/components/shared/FormDialog';
 import SelectField from '@/components/shared/SelectField';
-import { Wheat, Crown, Package, Zap, SlidersHorizontal, Download, Plus } from 'lucide-react';
+import { Wheat, Crown, Package, Zap, SlidersHorizontal, Search, X, Plus } from 'lucide-react';
 import DatePicker from '@/components/shared/DatePicker';
+import ExportDialog from '@/components/shared/ExportDialog';
 
 const inp = 'w-full h-10 px-3 rounded-lg bg-surface-container-high border border-border text-foreground text-sm placeholder:text-muted-foreground/50 focus:ring-1 focus:ring-primary outline-none';
 const lbl = 'label-sm text-muted-foreground block mb-1.5';
@@ -45,11 +46,23 @@ function UpdateFeedsForm() {
   );
 }
 
+const uniqueHorseNames = [...new Set(horseFeedLogs.map(f => f.horseName))];
+
 export default function HorseFeedsPage() {
   const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterHorse, setFilterHorse] = useState('');
   const perPage = 5;
-  const totalPages = Math.ceil(horseFeedLogs.length / perPage);
-  const paginated = horseFeedLogs.slice((currentPage - 1) * perPage, currentPage * perPage);
+
+  const filtered = useMemo(() => horseFeedLogs.filter(f => {
+    if (search && !f.horseName.toLowerCase().includes(search.toLowerCase())) return false;
+    if (filterHorse && f.horseName !== filterHorse) return false;
+    return true;
+  }), [search, filterHorse]);
+
+  const totalPages = Math.ceil(filtered.length / perPage);
+  const paginated = filtered.slice((currentPage - 1) * perPage, currentPage * perPage);
 
   const totalIntake = horseFeedLogs.reduce((s, f) => s + f.total, 0);
   const highestConsumer = horseFeedLogs.reduce((max, f) => f.total > max.total ? f : max, horseFeedLogs[0]);
@@ -70,7 +83,9 @@ export default function HorseFeedsPage() {
           <p className="text-sm text-muted-foreground mt-1">Dynamic resource allocation and metabolic tracking for Stallion Wing A.</p>
         </div>
         <div className="flex gap-2 shrink-0">
-          <button className="h-10 px-4 sm:px-5 rounded-lg border border-border text-foreground text-sm font-medium hover:bg-surface-container-high transition-colors">Export Report</button>
+          <ExportDialog filename="horse-feeds" trigger={
+            <button className="h-10 px-4 sm:px-5 rounded-lg border border-border text-foreground text-sm font-medium hover:bg-surface-container-high transition-colors">Export Report</button>
+          } />
           <FormDialog trigger={
             <button className="h-10 px-4 sm:px-5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:brightness-110 transition-all flex items-center gap-2">
               <Plus className="w-4 h-4" /> Update Feeds
@@ -81,7 +96,6 @@ export default function HorseFeedsPage() {
         </div>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-2 gap-4">
         {kpis.map(k => (
           <div key={k.label} className="bg-surface-container-highest rounded-xl p-5 edge-glow relative overflow-hidden">
@@ -94,7 +108,6 @@ export default function HorseFeedsPage() {
         ))}
       </div>
 
-      {/* Daily Consumption Matrix */}
       <div className="bg-surface-container-highest rounded-xl edge-glow overflow-hidden">
         <div className="flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 border-b border-border gap-3">
           <div className="flex items-center gap-3 min-w-0">
@@ -102,10 +115,51 @@ export default function HorseFeedsPage() {
             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-primary/20 text-primary uppercase tracking-wider shrink-0 hidden sm:inline">LiveSync</span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <button className="p-2 rounded-lg bg-surface-container-high text-muted-foreground hover:text-foreground"><SlidersHorizontal className="w-4 h-4" /></button>
-            <button className="p-2 rounded-lg bg-surface-container-high text-muted-foreground hover:text-foreground"><Download className="w-4 h-4" /></button>
+            <div className="relative hidden sm:block">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <input
+                value={search}
+                onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
+                placeholder="Search horse..."
+                className="h-8 pl-8 pr-3 w-40 rounded-lg bg-surface-container-high text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
+              />
+              {search && <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="w-3 h-3" /></button>}
+            </div>
+            <button
+              onClick={() => setShowFilters(v => !v)}
+              className={`p-2 rounded-lg transition-colors ${showFilters || filterHorse ? 'bg-primary/15 text-primary' : 'bg-surface-container-high text-muted-foreground hover:text-foreground'}`}
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+            </button>
           </div>
         </div>
+
+        {showFilters && (
+          <div className="px-3 sm:px-6 py-4 border-b border-border bg-surface-container-high/50">
+            <div className="flex flex-wrap gap-3 items-end">
+              <div className="w-full sm:hidden mb-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                  <input
+                    value={search}
+                    onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
+                    placeholder="Search horse..."
+                    className="h-9 pl-8 pr-3 w-full rounded-lg bg-surface-container-high border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
+                  />
+                </div>
+              </div>
+              <div className="w-44">
+                <SelectField label="HORSE" options={['All', ...uniqueHorseNames]} value={filterHorse || 'All'} size="sm" onChange={(v: string) => { setFilterHorse(v === 'All' ? '' : v); setCurrentPage(1); }} />
+              </div>
+              {filterHorse && (
+                <button onClick={() => setFilterHorse('')} className="h-9 px-3 rounded-lg text-xs text-destructive border border-destructive/30 hover:bg-destructive/10 transition-colors flex items-center gap-1.5">
+                  <X className="w-3 h-3" /> Clear
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="overflow-x-auto">
         <table className="w-full min-w-[750px]">
           <thead>
@@ -136,11 +190,14 @@ export default function HorseFeedsPage() {
                 <td className="px-6 py-4 mono-data text-sm font-bold text-primary">{f.total.toFixed(2)}</td>
               </tr>
             ))}
+            {paginated.length === 0 && (
+              <tr><td colSpan={8} className="px-6 py-8 text-center text-sm text-muted-foreground">No records match your filters.</td></tr>
+            )}
           </tbody>
         </table>
         </div>
         <div className="flex items-center justify-between px-3 sm:px-6 py-3 border-t border-border">
-          <span className="text-xs text-muted-foreground mono-data hidden sm:block">Displaying {paginated.length} of {horses.length} horses</span>
+          <span className="text-xs text-muted-foreground mono-data hidden sm:block">Displaying {paginated.length} of {filtered.length} records</span>
           <div className="flex items-center gap-2">
             <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-30">Previous</button>
             {Array.from({ length: totalPages }, (_, i) => (
@@ -151,7 +208,6 @@ export default function HorseFeedsPage() {
         </div>
       </div>
 
-      {/* Bottom Section: Trends + Insight */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         <div className="lg:col-span-3 bg-surface-container-highest rounded-xl p-5 sm:p-6 edge-glow">
           <div className="flex items-center justify-between mb-2">

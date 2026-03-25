@@ -1,18 +1,19 @@
 'use client';
-import { useState } from 'react';
-import { Package, DollarSign, AlertTriangle, Clock, Filter, SlidersHorizontal, Plus, Upload, Thermometer, Droplets, RefreshCw, TrendingUp } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Package, DollarSign, AlertTriangle, Clock, SlidersHorizontal, Search, X, Plus, Upload, Thermometer, Droplets, RefreshCw, TrendingUp } from 'lucide-react';
 import { groceryItems } from '@/data/seed';
 import SelectField from '@/components/shared/SelectField';
 import DatePicker from '@/components/shared/DatePicker';
+import ExportDialog from '@/components/shared/ExportDialog';
 
-const statusColor = (purchase: string, expiry: string) => {
+const getStatus = (expiry: string) => {
   const now = new Date();
   const exp = new Date(expiry);
   const diffDays = Math.ceil((exp.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-  if (diffDays < 0) return { label: 'EXPIRED', cls: 'bg-destructive/20 text-destructive' };
-  if (diffDays <= 7) return { label: 'NEAR EXPIRY', cls: 'bg-warning/20 text-warning' };
-  if (diffDays <= 30) return { label: 'STOCKED', cls: 'bg-primary/20 text-primary' };
-  return { label: 'OPTIMAL', cls: 'bg-success/20 text-success' };
+  if (diffDays < 0) return { label: 'EXPIRED', cls: 'bg-destructive/20 text-destructive', key: 'EXPIRED' };
+  if (diffDays <= 7) return { label: 'NEAR EXPIRY', cls: 'bg-warning/20 text-warning', key: 'NEAR EXPIRY' };
+  if (diffDays <= 30) return { label: 'STOCKED', cls: 'bg-primary/20 text-primary', key: 'STOCKED' };
+  return { label: 'OPTIMAL', cls: 'bg-success/20 text-success', key: 'OPTIMAL' };
 };
 
 const categories: Record<string, string> = {
@@ -26,7 +27,11 @@ const categories: Record<string, string> = {
 
 export default function GroceriesInventoryPage() {
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterStatus, setFilterStatus] = useState('');
   const perPage = 5;
+
   const totalValue = groceryItems.reduce((s, g) => s + g.quantity * g.pricePerUnit, 0);
   const nearExpiry = groceryItems.filter(g => {
     const diff = Math.ceil((new Date(g.expiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
@@ -34,8 +39,14 @@ export default function GroceriesInventoryPage() {
   }).length;
   const lowStock = groceryItems.filter(g => g.quantity < 15).length;
 
-  const paged = groceryItems.slice((page - 1) * perPage, page * perPage);
-  const totalPages = Math.ceil(groceryItems.length / perPage);
+  const filtered = useMemo(() => groceryItems.filter(g => {
+    if (search && !g.itemName.toLowerCase().includes(search.toLowerCase())) return false;
+    if (filterStatus && getStatus(g.expiryDate).key !== filterStatus) return false;
+    return true;
+  }), [search, filterStatus]);
+
+  const paged = filtered.slice((page - 1) * perPage, page * perPage);
+  const totalPages = Math.ceil(filtered.length / perPage);
 
   return (
     <div className="space-y-6">
@@ -46,9 +57,11 @@ export default function GroceriesInventoryPage() {
           <h1 className="display-sm text-foreground mt-1">Groceries Inventory</h1>
         </div>
         <div className="flex gap-3 shrink-0">
-          <button className="h-9 px-4 rounded-lg border border-border text-foreground text-sm font-medium flex items-center gap-2 hover:bg-surface-container-high transition-colors">
-            <Upload className="w-4 h-4" /> <span className="hidden sm:inline">Export Report</span><span className="sm:hidden">Export</span>
-          </button>
+          <ExportDialog filename="groceries-inventory" trigger={
+            <button className="h-9 px-4 rounded-lg border border-border text-foreground text-sm font-medium flex items-center gap-2 hover:bg-surface-container-high transition-colors">
+              <Upload className="w-4 h-4" /> <span className="hidden sm:inline">Export Report</span><span className="sm:hidden">Export</span>
+            </button>
+          } />
           <button className="h-9 px-4 rounded-lg bg-gradient-to-r from-primary to-primary-dim text-primary-foreground text-sm font-medium flex items-center gap-2">
             <Plus className="w-4 h-4" /> New Purchase
           </button>
@@ -147,16 +160,46 @@ export default function GroceriesInventoryPage() {
         {/* Inventory Table */}
         <div className="lg:col-span-8 order-1 lg:order-2">
           <div className="bg-surface-container-highest rounded-lg edge-glow overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-              <div className="flex items-center gap-3">
-                <h2 className="heading-md text-foreground uppercase tracking-wider">Current Inventory Clusters</h2>
-                <span className="text-xs text-muted-foreground mono-data">v4.0.2</span>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4 border-b border-border">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <h2 className="heading-md text-foreground uppercase tracking-wider truncate">Current Inventory Clusters</h2>
+                <span className="text-xs text-muted-foreground mono-data shrink-0">v4.0.2</span>
               </div>
-              <div className="flex gap-2">
-                <button className="p-2 rounded-lg hover:bg-surface-container-high text-muted-foreground"><Filter className="w-4 h-4" /></button>
-                <button className="p-2 rounded-lg hover:bg-surface-container-high text-muted-foreground"><SlidersHorizontal className="w-4 h-4" /></button>
+              <div className="flex gap-2 shrink-0">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                  <input
+                    value={search}
+                    onChange={e => { setSearch(e.target.value); setPage(1); }}
+                    placeholder="Search items..."
+                    className="h-8 pl-8 pr-3 w-40 rounded-lg bg-surface-container-high text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
+                  />
+                  {search && <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="w-3 h-3" /></button>}
+                </div>
+                <button
+                  onClick={() => setShowFilters(v => !v)}
+                  className={`p-2 rounded-lg transition-colors ${showFilters || filterStatus ? 'bg-primary/15 text-primary' : 'hover:bg-surface-container-high text-muted-foreground'}`}
+                >
+                  <SlidersHorizontal className="w-4 h-4" />
+                </button>
               </div>
             </div>
+
+            {showFilters && (
+              <div className="px-5 py-3 border-b border-border bg-surface-container-high/50">
+                <div className="flex flex-wrap gap-3 items-end">
+                  <div className="w-44">
+                    <SelectField label="STATUS" options={['All', 'OPTIMAL', 'STOCKED', 'NEAR EXPIRY', 'EXPIRED']} value={filterStatus || 'All'} size="sm" onChange={(v: string) => { setFilterStatus(v === 'All' ? '' : v); setPage(1); }} />
+                  </div>
+                  {filterStatus && (
+                    <button onClick={() => setFilterStatus('')} className="h-9 px-3 rounded-lg text-xs text-destructive border border-destructive/30 hover:bg-destructive/10 transition-colors flex items-center gap-1.5">
+                      <X className="w-3 h-3" /> Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="overflow-x-auto"><table className="w-full text-sm min-w-[640px]">
               <thead>
                 <tr className="border-b border-border">
@@ -171,7 +214,7 @@ export default function GroceriesInventoryPage() {
               </thead>
               <tbody>
                 {paged.map(g => {
-                  const st = statusColor(g.purchaseDate, g.expiryDate);
+                  const st = getStatus(g.expiryDate);
                   return (
                     <tr key={g.id} className="border-b border-border/50 hover:bg-surface-container-high/50 transition-colors">
                       <td className="px-5 py-4">
@@ -189,10 +232,13 @@ export default function GroceriesInventoryPage() {
                     </tr>
                   );
                 })}
+                {paged.length === 0 && (
+                  <tr><td colSpan={7} className="px-5 py-8 text-center text-sm text-muted-foreground">No items match your filters.</td></tr>
+                )}
               </tbody>
             </table></div>
             <div className="flex items-center justify-between px-5 py-3 border-t border-border">
-              <span className="text-xs text-muted-foreground">Showing {(page - 1) * perPage + 1}-{Math.min(page * perPage, groceryItems.length)} of {groceryItems.length} items</span>
+              <span className="text-xs text-muted-foreground">Showing {filtered.length === 0 ? 0 : (page - 1) * perPage + 1}-{Math.min(page * perPage, filtered.length)} of {filtered.length} items</span>
               <div className="flex gap-1">
                 <button onClick={() => setPage(p => Math.max(1, p - 1))} className="px-3 py-1.5 rounded text-xs text-muted-foreground hover:bg-surface-container-high">&lt;</button>
                 {Array.from({ length: totalPages }, (_, i) => (

@@ -1,10 +1,11 @@
 'use client';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { medicineLogs } from '@/data/seed';
-import { Pill, AlertTriangle, CheckCircle, Activity, SlidersHorizontal, Download } from 'lucide-react';
+import { Pill, AlertTriangle, CheckCircle, Activity, SlidersHorizontal, Search, X } from 'lucide-react';
 import FormDialog from '@/components/shared/FormDialog';
 import SelectField from '@/components/shared/SelectField';
 import DatePicker from '@/components/shared/DatePicker';
+import ExportDialog from '@/components/shared/ExportDialog';
 
 function AddMedicineLogForm() {
   return (
@@ -24,11 +25,29 @@ function AddMedicineLogForm() {
   );
 }
 
+const uniqueHorses = [...new Set(medicineLogs.map(m => m.horseName))];
+const uniqueAdmins = [...new Set(medicineLogs.map(m => m.administeredBy))];
+
 export default function MedicineLogsPage() {
   const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterHorse, setFilterHorse] = useState('');
+  const [filterAdmin, setFilterAdmin] = useState('');
   const perPage = 5;
-  const totalPages = Math.ceil(medicineLogs.length / perPage);
-  const paginated = medicineLogs.slice((currentPage - 1) * perPage, currentPage * perPage);
+
+  const filtered = useMemo(() => medicineLogs.filter(m => {
+    if (search && !m.horseName.toLowerCase().includes(search.toLowerCase()) && !m.medicineName.toLowerCase().includes(search.toLowerCase())) return false;
+    if (filterHorse && m.horseName !== filterHorse) return false;
+    if (filterAdmin && m.administeredBy !== filterAdmin) return false;
+    return true;
+  }), [search, filterHorse, filterAdmin]);
+
+  const totalPages = Math.ceil(filtered.length / perPage);
+  const paginated = filtered.slice((currentPage - 1) * perPage, currentPage * perPage);
+
+  const hasActiveFilters = filterHorse || filterAdmin;
+  const clearFilters = () => { setFilterHorse(''); setFilterAdmin(''); };
 
   const kpis = [
     { label: 'TOTAL ADMINISTRATIONS', value: medicineLogs.length, sub: '↗ 3 today', subColor: 'text-success', icon: Pill },
@@ -45,7 +64,9 @@ export default function MedicineLogsPage() {
           <p className="text-sm text-muted-foreground mt-1">Track medicine administration records and treatment history.</p>
         </div>
         <div className="flex gap-2">
-          <button className="h-10 px-4 sm:px-5 rounded-lg border border-border text-foreground text-sm font-medium hover:bg-surface-container-high transition-colors">Export</button>
+          <ExportDialog filename="medicine-logs" trigger={
+            <button className="h-10 px-4 sm:px-5 rounded-lg border border-border text-foreground text-sm font-medium hover:bg-surface-container-high transition-colors">Export</button>
+          } />
           <FormDialog trigger={
             <button className="h-10 px-4 sm:px-5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:brightness-110 transition-all">+ Add Log</button>
           } title="Add Medicine Log">
@@ -73,10 +94,54 @@ export default function MedicineLogsPage() {
             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-primary/20 text-primary uppercase tracking-wider hidden sm:inline-block">LiveSync</span>
           </div>
           <div className="flex items-center gap-2">
-            <button className="p-2 rounded-lg bg-surface-container-high text-muted-foreground hover:text-foreground"><SlidersHorizontal className="w-4 h-4" /></button>
-            <button className="p-2 rounded-lg bg-surface-container-high text-muted-foreground hover:text-foreground"><Download className="w-4 h-4" /></button>
+            <div className="relative hidden sm:block">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <input
+                value={search}
+                onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
+                placeholder="Search horse or medicine..."
+                className="h-8 pl-8 pr-3 w-52 rounded-lg bg-surface-container-high text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
+              />
+              {search && <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="w-3 h-3" /></button>}
+            </div>
+            <button
+              onClick={() => setShowFilters(v => !v)}
+              className={`p-2 rounded-lg transition-colors ${showFilters || hasActiveFilters ? 'bg-primary/15 text-primary' : 'bg-surface-container-high text-muted-foreground hover:text-foreground'}`}
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+            </button>
           </div>
         </div>
+
+        {showFilters && (
+          <div className="px-4 sm:px-6 py-4 border-b border-border bg-surface-container-high/50">
+            <div className="flex flex-wrap gap-3 items-end">
+              <div className="w-full sm:hidden mb-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                  <input
+                    value={search}
+                    onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
+                    placeholder="Search horse or medicine..."
+                    className="h-9 pl-8 pr-3 w-full rounded-lg bg-surface-container-high border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
+                  />
+                </div>
+              </div>
+              <div className="w-44">
+                <SelectField label="HORSE" options={['All', ...uniqueHorses]} value={filterHorse || 'All'} size="sm" onChange={(v: string) => { setFilterHorse(v === 'All' ? '' : v); setCurrentPage(1); }} />
+              </div>
+              <div className="w-44">
+                <SelectField label="ADMINISTERED BY" options={['All', ...uniqueAdmins]} value={filterAdmin || 'All'} size="sm" onChange={(v: string) => { setFilterAdmin(v === 'All' ? '' : v); setCurrentPage(1); }} />
+              </div>
+              {hasActiveFilters && (
+                <button onClick={clearFilters} className="h-9 px-3 rounded-lg text-xs text-destructive border border-destructive/30 hover:bg-destructive/10 transition-colors flex items-center gap-1.5">
+                  <X className="w-3 h-3" /> Clear Filters
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="overflow-x-auto">
           <table className="w-full min-w-[700px]">
             <thead>
@@ -97,11 +162,14 @@ export default function MedicineLogsPage() {
                   <td className="px-4 sm:px-6 py-4 text-sm text-foreground">{m.administeredBy}</td>
                 </tr>
               ))}
+              {paginated.length === 0 && (
+                <tr><td colSpan={6} className="px-6 py-8 text-center text-sm text-muted-foreground">No records match your filters.</td></tr>
+              )}
             </tbody>
           </table>
         </div>
         <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-t border-border">
-          <span className="text-xs text-muted-foreground mono-data">Displaying {paginated.length} of {medicineLogs.length}</span>
+          <span className="text-xs text-muted-foreground mono-data">Displaying {paginated.length} of {filtered.length}</span>
           <div className="flex items-center gap-2">
             <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-30">Previous</button>
             {Array.from({ length: totalPages }, (_, i) => (

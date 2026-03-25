@@ -1,10 +1,11 @@
 'use client';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { medicineInventory } from '@/data/seed';
 import FormDialog from '@/components/shared/FormDialog';
 import SelectField from '@/components/shared/SelectField';
-import { Package, AlertTriangle, TrendingUp, SlidersHorizontal, Download, Plus } from 'lucide-react';
+import { Package, AlertTriangle, TrendingUp, SlidersHorizontal, Search, X, Plus } from 'lucide-react';
 import DatePicker from '@/components/shared/DatePicker';
+import ExportDialog from '@/components/shared/ExportDialog';
 
 const inp = 'w-full h-10 px-3 rounded-lg bg-surface-container-high border border-border text-foreground text-sm placeholder:text-muted-foreground/50 focus:ring-1 focus:ring-primary outline-none';
 const lbl = 'label-sm text-muted-foreground block mb-1.5';
@@ -49,9 +50,20 @@ function AddMedicineRecordForm() {
 export default function MedicineInventoryPage() {
   const [activeTab, setActiveTab] = useState<'Inventory' | 'Report'>('Inventory');
   const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterStatus, setFilterStatus] = useState('');
   const perPage = 5;
-  const totalPages = Math.ceil(medicineInventory.length / perPage);
-  const paginated = medicineInventory.slice((currentPage - 1) * perPage, currentPage * perPage);
+
+  const filtered = useMemo(() => medicineInventory.filter(m => {
+    if (search && !m.medicineType.toLowerCase().includes(search.toLowerCase())) return false;
+    if (filterStatus === 'Low' && m.stockLevel > m.threshold) return false;
+    if (filterStatus === 'OK' && m.stockLevel <= m.threshold) return false;
+    return true;
+  }), [search, filterStatus]);
+
+  const totalPages = Math.ceil(filtered.length / perPage);
+  const paginated = filtered.slice((currentPage - 1) * perPage, currentPage * perPage);
 
   const totalStock = medicineInventory.reduce((s, m) => s + m.stockLevel, 0);
   const lowStockCount = medicineInventory.filter(m => m.stockLevel <= m.threshold).length;
@@ -71,7 +83,9 @@ export default function MedicineInventoryPage() {
           <p className="text-sm text-muted-foreground mt-1">Manage and track medicine stock levels across the facility.</p>
         </div>
         <div className="flex gap-2 shrink-0">
-          <button className="h-10 px-4 sm:px-5 rounded-lg border border-border text-foreground text-sm font-medium hover:bg-surface-container-high transition-colors">Export Report</button>
+          <ExportDialog filename="medicine-inventory" trigger={
+            <button className="h-10 px-4 sm:px-5 rounded-lg border border-border text-foreground text-sm font-medium hover:bg-surface-container-high transition-colors">Export Report</button>
+          } />
           <FormDialog trigger={
             <button className="h-10 px-4 sm:px-5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:brightness-110 transition-all flex items-center gap-2">
               <Plus className="w-4 h-4" /> Add Record
@@ -82,7 +96,6 @@ export default function MedicineInventoryPage() {
         </div>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {kpis.map(k => (
           <div key={k.label} className="bg-surface-container-highest rounded-xl p-5 edge-glow relative overflow-hidden">
@@ -95,7 +108,6 @@ export default function MedicineInventoryPage() {
         ))}
       </div>
 
-      {/* Tabs */}
       <div className="flex gap-1">
         {(['Inventory', 'Report'] as const).map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${activeTab === tab ? 'bg-primary-container text-accent-foreground' : 'text-muted-foreground hover:text-foreground'}`}>{tab}</button>
@@ -106,14 +118,40 @@ export default function MedicineInventoryPage() {
         <div className="bg-surface-container-highest rounded-xl edge-glow overflow-hidden">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between px-3 sm:px-6 py-3 sm:py-4 border-b border-border gap-3">
             <div className="flex items-center gap-2 flex-wrap">
-              <SelectField options={['March', 'February']} defaultValue="March" size="sm" className="w-32" />
-              <SelectField options={['2026', '2025']} defaultValue="2026" size="sm" className="w-24" />
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                <input
+                  value={search}
+                  onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
+                  placeholder="Search medicine..."
+                  className="h-8 pl-8 pr-3 w-44 rounded-lg bg-surface-container-high text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
+                />
+                {search && <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="w-3 h-3" /></button>}
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button className="p-2 rounded-lg bg-surface-container-high text-muted-foreground hover:text-foreground"><SlidersHorizontal className="w-4 h-4" /></button>
-              <button className="p-2 rounded-lg bg-surface-container-high text-muted-foreground hover:text-foreground"><Download className="w-4 h-4" /></button>
-            </div>
+            <button
+              onClick={() => setShowFilters(v => !v)}
+              className={`p-2 rounded-lg transition-colors ${showFilters || filterStatus ? 'bg-primary/15 text-primary' : 'bg-surface-container-high text-muted-foreground hover:text-foreground'}`}
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+            </button>
           </div>
+
+          {showFilters && (
+            <div className="px-3 sm:px-6 py-4 border-b border-border bg-surface-container-high/50">
+              <div className="flex flex-wrap gap-3 items-end">
+                <div className="w-36">
+                  <SelectField label="STOCK STATUS" options={['All', 'Low', 'OK']} value={filterStatus || 'All'} size="sm" onChange={(v: string) => { setFilterStatus(v === 'All' ? '' : v); setCurrentPage(1); }} />
+                </div>
+                {filterStatus && (
+                  <button onClick={() => setFilterStatus('')} className="h-9 px-3 rounded-lg text-xs text-destructive border border-destructive/30 hover:bg-destructive/10 transition-colors flex items-center gap-1.5">
+                    <X className="w-3 h-3" /> Clear
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="overflow-x-auto">
           <table className="w-full min-w-[750px]">
             <thead>
@@ -158,11 +196,14 @@ export default function MedicineInventoryPage() {
                   </tr>
                 );
               })}
+              {paginated.length === 0 && (
+                <tr><td colSpan={8} className="px-6 py-8 text-center text-sm text-muted-foreground">No records match your filters.</td></tr>
+              )}
             </tbody>
           </table>
           </div>
           <div className="flex items-center justify-between px-3 sm:px-6 py-3 border-t border-border">
-            <span className="text-xs text-muted-foreground mono-data hidden sm:block">Displaying {paginated.length} of {medicineInventory.length} records</span>
+            <span className="text-xs text-muted-foreground mono-data hidden sm:block">Displaying {paginated.length} of {filtered.length} records</span>
             <div className="flex items-center gap-2">
               <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-30">Previous</button>
               {Array.from({ length: totalPages }, (_, i) => (

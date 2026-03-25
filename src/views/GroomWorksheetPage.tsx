@@ -1,11 +1,12 @@
 'use client';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { groomWorksheets } from '@/data/seed';
 import FormDialog from '@/components/shared/FormDialog';
 import SelectField from '@/components/shared/SelectField';
-import { Search, Download, Plus, ClipboardList, Clock, CheckCircle2 } from 'lucide-react';
+import { Search, SlidersHorizontal, X, Plus, ClipboardList, Clock, CheckCircle2 } from 'lucide-react';
 import DatePicker from '@/components/shared/DatePicker';
 import TimePicker from '@/components/shared/TimePicker';
+import ExportDialog from '@/components/shared/ExportDialog';
 
 const inp = 'w-full h-10 px-3 rounded-lg bg-surface-container-high border border-border text-foreground text-sm placeholder:text-muted-foreground/50 focus:ring-1 focus:ring-primary outline-none';
 const lbl = 'label-sm text-muted-foreground block mb-1.5';
@@ -41,12 +42,21 @@ function NewWorksheetForm() {
   );
 }
 
+const uniqueGrooms = [...new Set(groomWorksheets.map(w => w.groomName))];
+
 export default function GroomWorksheetPage() {
   const [search, setSearch] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterGroom, setFilterGroom] = useState('');
+
   const totalHours = groomWorksheets.reduce((s, w) => s + w.entries.reduce((a, e) => a + e.totalHours, 0), 0);
   const totalEntries = groomWorksheets.reduce((s, w) => s + w.entries.length, 0);
 
-  const filtered = groomWorksheets.filter(w => !search || w.groomName.toLowerCase().includes(search.toLowerCase()));
+  const filtered = useMemo(() => groomWorksheets.filter(w => {
+    if (search && !w.groomName.toLowerCase().includes(search.toLowerCase())) return false;
+    if (filterGroom && w.groomName !== filterGroom) return false;
+    return true;
+  }), [search, filterGroom]);
 
   return (
     <div className="space-y-6">
@@ -56,9 +66,11 @@ export default function GroomWorksheetPage() {
           <p className="text-sm text-muted-foreground mt-1">Daily groom activity & stable care records</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <button className="h-9 px-3 sm:px-4 rounded-lg border border-border text-foreground text-sm font-medium flex items-center gap-2 hover:bg-surface-container-high transition-colors">
-            <Download className="w-4 h-4" /> <span className="hidden sm:inline">Export CSV</span>
-          </button>
+          <ExportDialog filename="groom-worksheet" trigger={
+            <button className="h-9 px-3 sm:px-4 rounded-lg border border-border text-foreground text-sm font-medium flex items-center gap-2 hover:bg-surface-container-high transition-colors">
+              <span className="hidden sm:inline">Export CSV</span><span className="sm:hidden">Export</span>
+            </button>
+          } />
           <FormDialog trigger={
             <button className="h-9 px-4 sm:px-5 rounded-lg bg-gradient-to-r from-primary to-primary-dim text-primary-foreground text-sm font-medium flex items-center gap-2">
               <Plus className="w-4 h-4" /> <span className="hidden sm:inline">New Worksheet</span><span className="sm:hidden">New</span>
@@ -94,10 +106,33 @@ export default function GroomWorksheetPage() {
         </div>
       </div>
 
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search groom..." className="w-full h-9 pl-10 pr-4 rounded-lg bg-surface-container-high border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search groom..." className="w-full h-9 pl-10 pr-8 rounded-lg bg-surface-container-high border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
+          {search && <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="w-3.5 h-3.5" /></button>}
+        </div>
+        <button
+          onClick={() => setShowFilters(v => !v)}
+          className={`h-9 px-3 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors ${showFilters || filterGroom ? 'bg-primary/15 text-primary border border-primary/30' : 'bg-surface-container-high text-muted-foreground hover:text-foreground'}`}
+        >
+          <SlidersHorizontal className="w-4 h-4" /> Filters
+          {filterGroom && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
+        </button>
       </div>
+
+      {showFilters && (
+        <div className="flex flex-wrap gap-3 items-end px-4 py-3 bg-surface-container-highest rounded-xl border border-border/50">
+          <div className="w-48">
+            <SelectField label="GROOM" options={['All', ...uniqueGrooms]} value={filterGroom || 'All'} size="sm" onChange={(v: string) => setFilterGroom(v === 'All' ? '' : v)} />
+          </div>
+          {filterGroom && (
+            <button onClick={() => setFilterGroom('')} className="h-9 px-3 rounded-lg text-xs text-destructive border border-destructive/30 hover:bg-destructive/10 transition-colors flex items-center gap-1.5">
+              <X className="w-3 h-3" /> Clear
+            </button>
+          )}
+        </div>
+      )}
 
       {filtered.map(ws => (
         <div key={ws.id} className="bg-surface-container-highest rounded-xl p-5 edge-glow">
@@ -140,6 +175,9 @@ export default function GroomWorksheetPage() {
           </div>
         </div>
       ))}
+      {filtered.length === 0 && (
+        <div className="bg-surface-container-highest rounded-xl p-8 text-center text-sm text-muted-foreground edge-glow">No worksheets match your filters.</div>
+      )}
     </div>
   );
 }
